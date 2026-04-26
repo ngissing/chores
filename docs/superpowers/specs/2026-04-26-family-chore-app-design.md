@@ -307,9 +307,6 @@ Research by Grolnick & Ryan (1989) shows children are more compliant and intrins
 ### Autonomy over money allocation (already designed)
 Self-determination theory (Deci & Ryan, 1985) demonstrates that autonomy is a core driver of intrinsic motivation. Having kids *choose* their own Spend/Save/Give split — rather than having it set by parents — builds genuine financial decision-making skills and increases engagement with the system.
 
-### Suggested: family leaderboard (optional)
-Light social comparison (seeing siblings' progress) can motivate, but research warns it can demotivate lower performers. Recommend making this opt-in per member in Settings: "Show on leaderboard." If enabled, a subtle total-points ranking is visible in the member selector bar.
-
 ### Suggested: "Completion ratio" visible to parents
 A simple admin view showing each child's completion rate over the past 7/30 days helps parents identify which chores are being skipped consistently — a signal to adjust difficulty or points value.
 
