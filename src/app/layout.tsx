@@ -1,21 +1,28 @@
-import type { Metadata } from "next";
-import "./globals.css";
+import type { Metadata } from 'next'
+import { Fredoka_One, Nunito } from 'next/font/google'
+import './globals.css'
+
+const fredoka = Fredoka_One({
+  weight: '400',
+  subsets: ['latin'],
+  variable: '--font-fredoka',
+  display: 'swap',
+})
+const nunito = Nunito({
+  subsets: ['latin'],
+  variable: '--font-nunito',
+  display: 'swap',
+})
 
 export const metadata: Metadata = {
-  title: "ChoreChart",
-  description: "Family chore tracker",
-};
+  title: 'ChoreChart',
+  description: 'Family chore tracker',
+}
 
-export default function RootLayout({
-  children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en">
-      <body className="antialiased">
-        {children}
-      </body>
+    <html lang="en" className={`${fredoka.variable} ${nunito.variable}`}>
+      <body className="no-select">{children}</body>
     </html>
-  );
+  )
 }
