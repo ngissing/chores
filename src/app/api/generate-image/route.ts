@@ -5,8 +5,6 @@ import https from 'https'
 import fs from 'fs'
 import path from 'path'
 
-const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY })
-
 function downloadFile(url: string, dest: string): Promise<void> {
   return new Promise((resolve, reject) => {
     const file = fs.createWriteStream(dest)
@@ -24,6 +22,7 @@ export async function POST(req: NextRequest) {
   db.prepare("UPDATE chores SET image_status='pending' WHERE id=?").run(chore_id)
 
   try {
+    const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY })
     const prompt = `A simple, bright, friendly illustration of a child ${chore_name}, cartoon style, white background, suitable for young children`
     const response = await client.images.generate({
       model: 'dall-e-3',
@@ -32,7 +31,8 @@ export async function POST(req: NextRequest) {
       size: '1024x1024',
     })
 
-    const imageUrl = response.data[0].url!
+    const imageUrl = response.data?.[0]?.url
+    if (!imageUrl) throw new Error('No image URL returned from OpenAI')
     const destPath = path.join(process.cwd(), 'public', 'chore-images', `${chore_id}.png`)
     await downloadFile(imageUrl, destPath)
 
