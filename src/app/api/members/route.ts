@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getDb } from '@/lib/db'
 
+export const dynamic = 'force-dynamic'
+
 export function GET() {
   const members = getDb().prepare('SELECT * FROM members ORDER BY id').all()
   return NextResponse.json(members)

@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getDb } from '@/lib/db'
 
+export const dynamic = 'force-dynamic'
+
 // GET /api/completions/ratio?days=7
 export function GET(req: NextRequest) {
   const days = Number(new URL(req.url).searchParams.get('days') ?? '7')

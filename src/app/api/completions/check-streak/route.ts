@@ -21,7 +21,7 @@ export async function POST(req: NextRequest) {
     WHERE ca.member_id = ? AND (c.routine = ? OR c.routine = 'both')
   `).all(member_id, routine) as { id: number }[]
 
-  if (assigned.length === 0) return NextResponse.json({ streak_updated: false })
+  if (assigned.length === 0) return NextResponse.json({ streak_updated: false, all_done: false })
 
   const completedToday = db
     .prepare('SELECT chore_id FROM completions WHERE member_id=? AND date=?')
@@ -36,7 +36,7 @@ export async function POST(req: NextRequest) {
     .prepare('SELECT streak_days, last_streak_date FROM members WHERE id=?')
     .get(member_id) as { streak_days: number; last_streak_date: string | null } | undefined
 
-  if (!member) return NextResponse.json({ streak_updated: false })
+  if (!member) return NextResponse.json({ streak_updated: false, all_done: false })
   if (member.last_streak_date === today) return NextResponse.json({ streak_updated: false, reason: 'already_updated', all_done: true })
 
   const yesterday = new Date()

@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getDb } from '@/lib/db'
 import { hashPin, verifyPin } from '@/lib/auth'
 
+export const dynamic = 'force-dynamic'
+
 export function GET() {
   const rows = getDb().prepare('SELECT key, value FROM settings').all() as {
     key: string; value: string

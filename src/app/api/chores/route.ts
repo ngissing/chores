@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getDb } from '@/lib/db'
 
+export const dynamic = 'force-dynamic'
+
 export function GET() {
   const db = getDb()
   const chores = db.prepare('SELECT * FROM chores ORDER BY id').all()
