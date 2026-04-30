@@ -1,5 +1,5 @@
 'use client'
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 
 interface Props {
   onSuccess: () => void
@@ -12,6 +12,12 @@ export default function PinGate({ onSuccess }: Props) {
   const [locked, setLocked] = useState(false)
   const [lockSeconds, setLockSeconds] = useState(0)
   const lockRef = useRef<NodeJS.Timeout | null>(null)
+
+  useEffect(() => {
+    return () => {
+      if (lockRef.current) clearInterval(lockRef.current)
+    }
+  }, [])
 
   const press = (digit: string) => {
     if (locked) return
@@ -30,8 +36,8 @@ export default function PinGate({ onSuccess }: Props) {
     if (ok) {
       onSuccess()
     } else {
+      setAttempts((prev) => prev + 1)
       const newAttempts = attempts + 1
-      setAttempts(newAttempts)
       setShake(true)
       setPin('')
       setTimeout(() => setShake(false), 500)
