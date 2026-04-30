@@ -19,20 +19,19 @@ export default function ChoresTab() {
   const save = async () => {
     if (!editing) return
     const isNew = !editing.id
-    await fetch('/api/chores', {
+    const res = await fetch('/api/chores', {
       method: isNew ? 'POST' : 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(editing),
     })
     mutate()
     if (isNew) {
-      const updated = await fetch('/api/chores').then((r) => r.json()) as Chore[]
-      const newest = updated[updated.length - 1]
-      if (newest) {
+      const created = await res.json() as Chore
+      if (created?.id) {
         fetch('/api/generate-image', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ chore_id: newest.id, chore_name: newest.name }),
+          body: JSON.stringify({ chore_id: created.id, chore_name: created.name }),
         })
       }
     }

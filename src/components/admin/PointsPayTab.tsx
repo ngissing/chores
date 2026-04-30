@@ -1,6 +1,6 @@
 'use client'
 import { useState } from 'react'
-import useSWR from 'swr'
+import useSWR, { useSWRConfig } from 'swr'
 import { useMembers } from '@/hooks/useMembers'
 import { centsToDisplay } from '@/lib/points'
 import type { Member } from '@/hooks/useMembers'
@@ -15,6 +15,7 @@ export default function PointsPayTab() {
   const [addForm, setAddForm] = useState<{ member_id: number; bucket: string; amount: string } | null>(null)
   const [ratioDays, setRatioDays] = useState(7)
   const { data: ratios } = useSWR<RatioEntry[]>(`/api/completions/ratio?days=${ratioDays}`, fetcher, { refreshInterval: 30000 })
+  const { mutate: globalMutate } = useSWRConfig()
 
   const payout = async (memberId: number) => {
     if (!confirm('Mark as paid? This will zero all balances.')) return
@@ -23,6 +24,7 @@ export default function PointsPayTab() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ action: 'payout', member_id: memberId }),
     })
+    globalMutate(`/api/points?member_id=${memberId}`)
   }
 
   const adminAdd = async () => {
@@ -37,6 +39,7 @@ export default function PointsPayTab() {
         amount_cents: Math.round(parseFloat(addForm.amount) * 100),
       }),
     })
+    globalMutate(`/api/points?member_id=${addForm.member_id}`)
     setAddForm(null)
   }
 
