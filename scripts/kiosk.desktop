@@ -1,0 +1,6 @@
+[Desktop Entry]
+Type=Application
+Name=Chore App Kiosk
+Exec=bash -c "sleep 10 && chromium-browser --noerrdialogs --disable-infobars --kiosk http://localhost:3000"
+Hidden=false
+X-GNOME-Autostart-enabled=true
