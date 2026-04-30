@@ -4,10 +4,11 @@ import { centsToDisplay } from '@/lib/points'
 interface Props {
   totalCents: number
   remainingCents: number
+  isConfirming?: boolean
   onConfirm: () => void
 }
 
-export default function AllocationFooter({ totalCents, remainingCents, onConfirm }: Props) {
+export default function AllocationFooter({ totalCents, remainingCents, isConfirming, onConfirm }: Props) {
   const allDone = remainingCents === 0
 
   return (
@@ -32,14 +33,14 @@ export default function AllocationFooter({ totalCents, remainingCents, onConfirm
       <div className="flex-1" />
       <button
         onClick={onConfirm}
-        disabled={!allDone}
+        disabled={!allDone || isConfirming}
         className="px-6 py-3 rounded-2xl text-base font-black transition-all active:scale-95"
         style={{
-          background: allDone ? '#4ade80' : 'rgba(255,255,255,0.1)',
-          color: allDone ? '#111' : 'rgba(255,255,255,0.3)',
+          background: allDone && !isConfirming ? '#4ade80' : 'rgba(255,255,255,0.1)',
+          color: allDone && !isConfirming ? '#111' : 'rgba(255,255,255,0.3)',
         }}
       >
-        Confirm →
+        {isConfirming ? '...' : 'Confirm →'}
       </button>
     </div>
   )

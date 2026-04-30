@@ -5,16 +5,18 @@ import { useMembers } from '@/hooks/useMembers'
 import { usePoints } from '@/hooks/usePoints'
 import BucketColumn from '@/components/cashin/BucketColumn'
 import AllocationFooter from '@/components/cashin/AllocationFooter'
+import { centsToDisplay } from '@/lib/points'
 
 const INCREMENT = 50 // $0.50 per tap
 
 export default function CashInPage() {
   const { memberId } = useParams<{ memberId: string }>()
-  const mid = Number(memberId)
   const router = useRouter()
+  const mid = Number(memberId)
   const { members } = useMembers()
-  const points = usePoints(mid)
+  const points = usePoints(isNaN(mid) ? null : mid)
   const [allocations, setAllocations] = useState({ spend: 0, save: 0, give: 0 })
+  const [isConfirming, setIsConfirming] = useState(false)
 
   const member = members.find((m) => m.id === mid)
   const accentColour = member?.colour ?? '#6366f1'
@@ -22,12 +24,19 @@ export default function CashInPage() {
   const allocated = allocations.spend + allocations.save + allocations.give
   const remaining = totalCents - allocated
 
-  // Redirect back if nothing to allocate
+  // Redirect if invalid memberId
   useEffect(() => {
-    if (totalCents === 0 && points.unallocated !== undefined) {
+    if (isNaN(mid)) {
       router.replace('/')
     }
-  }, [totalCents, router, points.unallocated])
+  }, [mid, router])
+
+  // Redirect back if nothing to allocate (only after SWR has loaded)
+  useEffect(() => {
+    if (!points.isLoading && totalCents === 0) {
+      router.replace('/')
+    }
+  }, [points.isLoading, totalCents, router])
 
   const add = (b: 'spend' | 'save' | 'give') => {
     if (remaining < INCREMENT) return
@@ -38,16 +47,27 @@ export default function CashInPage() {
     setAllocations((a) => ({ ...a, [b]: Math.max(0, a[b] - INCREMENT) }))
 
   const handleConfirm = async () => {
-    await fetch('/api/points', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ action: 'allocate', member_id: mid, allocations }),
-    })
-    // Celebration
-    const { default: confetti } = await import('canvas-confetti')
-    confetti({ particleCount: 150, spread: 80, origin: { y: 0.6 } })
-    setTimeout(() => router.push('/'), 2000)
+    if (isConfirming) return
+    setIsConfirming(true)
+    try {
+      const res = await fetch('/api/points', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'allocate', member_id: mid, allocations }),
+      })
+      if (!res.ok) {
+        setIsConfirming(false)
+        return
+      }
+      const { default: confetti } = await import('canvas-confetti')
+      confetti({ particleCount: 150, spread: 80, origin: { y: 0.6 } })
+      setTimeout(() => router.push('/'), 2000)
+    } catch {
+      setIsConfirming(false)
+    }
   }
+
+  if (isNaN(mid)) return null
 
   return (
     <div
@@ -73,7 +93,7 @@ export default function CashInPage() {
       >
         <button
           onClick={() => router.push('/')}
-          className="px-3 py-1 rounded-xl text-sm font-bold text-white/50"
+          className="px-3 py-3 rounded-xl text-sm font-bold text-white/50"
           style={{ background: 'rgba(255,255,255,0.09)' }}
         >
           ← Back
@@ -92,7 +112,7 @@ export default function CashInPage() {
               color: remaining === 0 ? '#4ade80' : accentColour,
             }}
           >
-            ${(totalCents / 100).toFixed(2)}
+            {centsToDisplay(totalCents)}
           </div>
           <div className="text-xs text-white/35">
             {remaining === 0 ? 'all allocated' : 'to allocate'}
@@ -108,6 +128,7 @@ export default function CashInPage() {
             bucket={b}
             allocatedCents={allocations[b]}
             balanceCents={points[b]}
+            canAdd={remaining >= INCREMENT}
             onAdd={() => add(b)}
             onRemove={() => remove(b)}
           />
@@ -119,6 +140,7 @@ export default function CashInPage() {
         <AllocationFooter
           totalCents={totalCents}
           remainingCents={remaining}
+          isConfirming={isConfirming}
           onConfirm={handleConfirm}
         />
       </div>

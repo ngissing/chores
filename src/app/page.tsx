@@ -30,33 +30,37 @@ export default function HomePage() {
   const activeMember = members.find((m) => m.id === activeMemberId)
   const accentColour = activeMember?.colour ?? '#6366f1'
 
+  const [pendingIds, setPendingIds] = useState<Set<number>>(new Set())
+
   const handleToggle = async (choreId: number) => {
-    if (!activeMemberId) return
-    const isCompleted = completedIds.has(choreId)
-
-    await fetch('/api/completions', {
-      method: isCompleted ? 'DELETE' : 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ chore_id: choreId, member_id: activeMemberId }),
-    })
-
-    // On completion (not un-completion): check streak + trigger celebration if all done
-    if (!isCompleted) {
-      const res = await fetch('/api/completions/check-streak', {
-        method: 'POST',
+    if (!activeMemberId || pendingIds.has(choreId)) return
+    setPendingIds((s) => new Set(s).add(choreId))
+    try {
+      const isCompleted = completedIds.has(choreId)
+      await fetch('/api/completions', {
+        method: isCompleted ? 'DELETE' : 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ member_id: activeMemberId }),
+        body: JSON.stringify({ chore_id: choreId, member_id: activeMemberId }),
       })
-      const { all_done } = await res.json()
-      if (all_done) {
-        // Dynamic import keeps canvas-confetti out of the initial bundle
-        const { default: confetti } = await import('canvas-confetti')
-        confetti({ particleCount: 200, spread: 120, origin: { y: 0.5 } })
+      if (!isCompleted) {
+        const res = await fetch('/api/completions/check-streak', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ member_id: activeMemberId }),
+        })
+        if (res.ok) {
+          const { all_done } = await res.json()
+          if (all_done) {
+            const { default: confetti } = await import('canvas-confetti')
+            confetti({ particleCount: 200, spread: 90, origin: { y: 0.6 } })
+          }
+        }
       }
+    } finally {
+      setPendingIds((s) => { const n = new Set(s); n.delete(choreId); return n })
+      mutateCompletions()
+      points.mutate()
     }
-
-    mutateCompletions()
-    points.mutate()
   }
 
   const routineLabel = routine === 'morning' ? '☀️ MORNING' : '🌙 AFTERNOON'
@@ -129,6 +133,7 @@ export default function HomePage() {
           chores={chores}
           completedIds={completedIds}
           accentColour={accentColour}
+          pendingIds={pendingIds}
           onToggle={handleToggle}
         />
       </div>

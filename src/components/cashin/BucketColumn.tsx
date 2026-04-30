@@ -5,6 +5,7 @@ interface Props {
   bucket: 'spend' | 'save' | 'give'
   allocatedCents: number
   balanceCents: number
+  canAdd: boolean
   onAdd: () => void
   onRemove: () => void
 }
@@ -19,6 +20,7 @@ export default function BucketColumn({
   bucket,
   allocatedCents,
   balanceCents,
+  canAdd,
   onAdd,
   onRemove,
 }: Props) {
@@ -59,10 +61,12 @@ export default function BucketColumn({
         </button>
         <button
           onClick={onAdd}
+          disabled={!canAdd}
           className="w-14 h-14 rounded-2xl flex items-center justify-center text-3xl font-black active:scale-95 transition-transform"
           style={{
             background: colour,
             color: bucket === 'give' ? '#111' : '#fff',
+            opacity: canAdd ? 1 : 0.4,
           }}
         >
           +

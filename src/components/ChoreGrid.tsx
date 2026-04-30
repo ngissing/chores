@@ -7,10 +7,11 @@ interface Props {
   chores: Chore[]
   completedIds: Set<number>
   accentColour: string
+  pendingIds?: Set<number>
   onToggle: (choreId: number) => void
 }
 
-export default function ChoreGrid({ chores, completedIds, accentColour, onToggle }: Props) {
+export default function ChoreGrid({ chores, completedIds, accentColour, pendingIds, onToggle }: Props) {
   const { cols, rows } = computeGridLayout(chores.length)
 
   if (chores.length === 0) {
@@ -40,6 +41,7 @@ export default function ChoreGrid({ chores, completedIds, accentColour, onToggle
           imageStatus={chore.image_status}
           completed={completedIds.has(chore.id)}
           accentColour={accentColour}
+          isPending={pendingIds?.has(chore.id)}
           onToggle={onToggle}
         />
       ))}
