@@ -24,16 +24,20 @@ export default function ChoresTab() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(editing),
     })
-    mutate()
     if (isNew) {
-      const created = await res.json() as Chore
-      if (created?.id) {
-        fetch('/api/generate-image', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ chore_id: created.id, chore_name: created.name }),
-        })
+      const created = await res.json() as { id: number; name: string }
+      mutate()
+      if (created?.id && editing.member_ids.length > 0) {
+        for (const mid of editing.member_ids) {
+          fetch('/api/generate-image', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ chore_id: created.id, chore_name: created.name, member_id: mid }),
+          })
+        }
       }
+    } else {
+      mutate()
     }
     setEditing(null)
   }
@@ -49,11 +53,14 @@ export default function ChoresTab() {
   }
 
   const retryImage = (c: Chore) => {
-    fetch('/api/generate-image', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ chore_id: c.id, chore_name: c.name }),
-    }).then(() => mutate())
+    for (const mid of c.member_ids) {
+      fetch('/api/generate-image', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ chore_id: c.id, chore_name: c.name, member_id: mid }),
+      })
+    }
+    setTimeout(() => mutate(), 500)
   }
 
   const toggleMember = (mid: number) =>
