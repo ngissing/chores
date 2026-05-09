@@ -9,15 +9,14 @@ export function GET() {
 }
 
 export async function POST(req: NextRequest) {
-  const { name, age, colour, point_value_cents } = await req.json()
+  const { name, age, colour, point_value_cents, appearance } = await req.json()
   const db = getDb()
   const result = db
-    .prepare('INSERT INTO members (name, age, colour, point_value_cents) VALUES (?, ?, ?, ?)')
-    .run(name, age, colour ?? '#6366f1', point_value_cents ?? 10)
+    .prepare('INSERT INTO members (name, age, colour, point_value_cents, appearance) VALUES (?, ?, ?, ?, ?)')
+    .run(name, age, colour ?? '#6366f1', point_value_cents ?? 10, appearance ?? '')
 
   const memberId = result.lastInsertRowid as number
 
-  // Seed the four balance buckets for this member
   const ins = db.prepare(
     'INSERT INTO point_balances (member_id, bucket, balance_cents) VALUES (?, ?, 0)'
   )
@@ -29,10 +28,10 @@ export async function POST(req: NextRequest) {
 }
 
 export async function PUT(req: NextRequest) {
-  const { id, name, age, colour, point_value_cents } = await req.json()
+  const { id, name, age, colour, point_value_cents, appearance } = await req.json()
   getDb()
-    .prepare('UPDATE members SET name=?, age=?, colour=?, point_value_cents=? WHERE id=?')
-    .run(name, age, colour, point_value_cents, id)
+    .prepare('UPDATE members SET name=?, age=?, colour=?, point_value_cents=?, appearance=? WHERE id=?')
+    .run(name, age, colour, point_value_cents, appearance ?? '', id)
   return NextResponse.json({ ok: true })
 }
 

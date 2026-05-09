@@ -41,7 +41,7 @@ export default function MembersTab() {
       <div className="flex items-center justify-between">
         <h2 className="text-lg font-bold text-white" style={{ fontFamily: 'var(--font-fredoka)' }}>Members</h2>
         <button
-          onClick={() => setEditing({ name: '', age: 5, colour: '#6366f1', point_value_cents: 10 })}
+          onClick={() => setEditing({ name: '', age: 5, colour: '#6366f1', point_value_cents: 10, appearance: '' })}
           className="px-4 py-2 rounded-xl text-sm font-bold text-white"
           style={{ background: '#6366f1' }}>
           + Add Member
@@ -98,6 +98,16 @@ export default function MembersTab() {
               <input type="color" value={editing.colour ?? '#6366f1'}
                 onChange={(e) => setEditing((p) => ({ ...p, colour: e.target.value }))}
                 className="w-full h-10 rounded-xl cursor-pointer" />
+            </div>
+            <div className="flex flex-col gap-1">
+              <label className="text-xs text-white/50">Appearance description</label>
+              <textarea
+                placeholder="e.g. blonde hair, blue eyes, wears a red shirt"
+                value={editing.appearance ?? ''}
+                onChange={(e) => setEditing((p) => ({ ...p, appearance: e.target.value }))}
+                rows={2}
+                className="px-3 py-2 rounded-xl bg-white/10 text-white outline-none border border-white/10 resize-none text-sm"
+              />
             </div>
             <div className="flex flex-col gap-1">
               <label className="text-xs text-white/50">Cents per point (e.g. 10 = $0.10)</label>

@@ -11,6 +11,7 @@ export interface Member {
   photo_path: string | null
   point_value_cents: number
   streak_days: number
+  appearance: string
 }
 
 export function useMembers() {
