@@ -25,7 +25,10 @@ export function useChores(
   routine: 'morning' | 'afternoon',
   date: string
 ) {
-  const { data: allChores, mutate: mutateChores } = useSWR<Chore[]>('/api/chores', fetcher)
+  const { data: allChores, mutate: mutateChores } = useSWR<Chore[]>(
+    memberId ? `/api/chores?member_id=${memberId}` : '/api/chores',
+    fetcher
+  )
   const { data: completions, mutate: mutateCompletions } = useSWR<Completion[]>(
     memberId ? `/api/completions?date=${date}&member_id=${memberId}` : null,
     fetcher,
