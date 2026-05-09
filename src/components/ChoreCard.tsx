@@ -35,10 +35,10 @@ export default function ChoreCard({
       }}
     >
       {/* Image area */}
-      <div className="w-full h-full overflow-hidden flex items-center justify-center bg-black/20">
+      <div className="w-full h-full overflow-hidden flex items-center justify-center bg-white">
         {imageStatus === 'ready' && imagePath ? (
           // eslint-disable-next-line @next/next/no-img-element
-          <img src={imagePath} alt={name} className="w-full h-full object-cover" />
+          <img src={imagePath} alt={name} className="w-full h-full object-contain" />
         ) : (
           <span
             className="text-4xl"
