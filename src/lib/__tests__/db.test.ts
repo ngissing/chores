@@ -14,6 +14,7 @@ test('schema initialises all tables', () => {
   expect(tables).toContain('point_balances')
   expect(tables).toContain('point_transactions')
   expect(tables).toContain('settings')
+  expect(tables).toContain('chore_member_images')
 })
 
 test('default settings are seeded', () => {
@@ -53,4 +54,13 @@ test('chore_member_images has correct columns', () => {
   expect(cols).toContain('member_id')
   expect(cols).toContain('image_path')
   expect(cols).toContain('image_status')
+})
+
+test('chore_member_images enforces FK on chore_id', () => {
+  const db = getDb()
+  expect(() => {
+    db.prepare(
+      "INSERT INTO chore_member_images (chore_id, member_id, image_path, image_status) VALUES (999999, 1, '/fake/path.png', 'pending')"
+    ).run()
+  }).toThrow()
 })
