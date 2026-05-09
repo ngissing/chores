@@ -6,20 +6,20 @@ import path from 'path'
 
 export const maxDuration = 120
 
-const BASE_PROMPT = `Create a kid-friendly chore-card style illustration on a pure white background. Use a clean, cheerful children's picture-book/vector cartoon style with simple shapes, soft pastel colours, bold but gentle outlines, smooth shading, and minimal clutter.
+const BASE_PROMPT = `A single illustration for a children's chore chart. Pure white background — no scenes, no borders, no panels, no collage, no multiple views. One image only.
 
-The character should have big expressive eyes, rosy cheeks, and a happy smile completing a simple household chore. Keep the character consistent across images for specific users.
+Style: flat vector cartoon, simple shapes, soft pastel colours, clean outlines, minimal detail. Think simple app icon meets children's picture book.
 
-The action should be obvious at a glance and clearly show what chore needs to be completed. Use only the essential objects needed to communicate the task. Keep the composition centred, uncluttered, polished, and suitable for a children's chores chart.`
+Content: one cheerful child character with big eyes, rosy cheeks, and a happy smile, clearly performing a household chore. The chore action must be the obvious focus. Include only the one or two essential props needed to show the task — nothing else.
+
+Do not show multiple versions of the character. Do not show step-by-step panels. Do not add backgrounds, textures, or decorative elements. White background only.`
 
 function buildPrompt(choreName: string, appearance: string): string {
   const parts = [BASE_PROMPT]
   if (appearance.trim()) {
-    parts.push(
-      `The character should look like: ${appearance.trim()}. Keep this character consistent across all chore images for this child.`
-    )
+    parts.push(`The child character should look like: ${appearance.trim()}.`)
   }
-  parts.push(`The chore being completed is: ${choreName}.`)
+  parts.push(`The chore being illustrated is: ${choreName}.`)
   return parts.join('\n\n')
 }
 
