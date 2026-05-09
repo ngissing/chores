@@ -11,6 +11,7 @@
     "test:watch": "jest --watch"
   },
   "dependencies": {
+    "@google/genai": "^2.0.1",
     "bcryptjs": "^3.0.3",
     "better-sqlite3": "^12.9.0",
     "canvas-confetti": "^1.9.4",

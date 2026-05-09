@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getDb } from '@/lib/db'
-import OpenAI from 'openai'
+import { GoogleGenAI } from '@google/genai'
 import fs from 'fs'
 import path from 'path'
 
@@ -23,13 +23,6 @@ function buildPrompt(choreName: string, appearance: string): string {
   return parts.join('\n\n')
 }
 
-async function downloadFile(url: string, dest: string): Promise<void> {
-  const res = await fetch(url)
-  if (!res.ok) throw new Error(`Failed to download image: ${res.status} ${res.statusText}`)
-  const buffer = await res.arrayBuffer()
-  fs.mkdirSync(path.dirname(dest), { recursive: true })
-  await fs.promises.writeFile(dest, Buffer.from(buffer))
-}
 
 export async function POST(req: NextRequest) {
   const { chore_id, chore_name, member_id } = await req.json()
@@ -47,22 +40,22 @@ export async function POST(req: NextRequest) {
       .get(member_id) as { appearance: string } | undefined
     const appearance = member?.appearance ?? ''
 
-    const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY })
+    const ai = new GoogleGenAI({ apiKey: process.env.GOOGLE_API_KEY })
     const prompt = buildPrompt(chore_name, appearance)
 
-    const response = await client.images.generate({
-      model: 'dall-e-3',
+    const response = await ai.models.generateImages({
+      model: 'imagen-3.0-generate-002',
       prompt,
-      n: 1,
-      size: '1024x1024',
+      config: { numberOfImages: 1, outputMimeType: 'image/png' },
     })
 
-    const imageUrl = response.data?.[0]?.url
-    if (!imageUrl) throw new Error('No image URL returned from OpenAI')
+    const base64 = response.generatedImages?.[0]?.image?.imageBytes
+    if (!base64) throw new Error('No image data returned from Google')
 
     const filename = `${chore_id}_${member_id}.png`
     const destPath = path.join(process.cwd(), 'public', 'chore-images', filename)
-    await downloadFile(imageUrl, destPath)
+    fs.mkdirSync(path.dirname(destPath), { recursive: true })
+    await fs.promises.writeFile(destPath, Buffer.from(base64, 'base64'))
 
     db.prepare(`
       UPDATE chore_member_images SET image_path = ?, image_status = 'ready'
