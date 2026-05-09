@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getDb } from '@/lib/db'
 import OpenAI from 'openai'
-import https from 'https'
 import fs from 'fs'
 import path from 'path'
+
+export const maxDuration = 120
 
 const BASE_PROMPT = `Create a kid-friendly chore-card style illustration on a pure white background. Use a clean, cheerful children's picture-book/vector cartoon style with simple shapes, soft pastel colours, bold but gentle outlines, smooth shading, and minimal clutter.
 
@@ -22,14 +23,12 @@ function buildPrompt(choreName: string, appearance: string): string {
   return parts.join('\n\n')
 }
 
-function downloadFile(url: string, dest: string): Promise<void> {
-  return new Promise((resolve, reject) => {
-    const file = fs.createWriteStream(dest)
-    https.get(url, (res) => {
-      res.pipe(file)
-      file.on('finish', () => { file.close(); resolve() })
-    }).on('error', reject)
-  })
+async function downloadFile(url: string, dest: string): Promise<void> {
+  const res = await fetch(url)
+  if (!res.ok) throw new Error(`Failed to download image: ${res.status} ${res.statusText}`)
+  const buffer = await res.arrayBuffer()
+  fs.mkdirSync(path.dirname(dest), { recursive: true })
+  await fs.promises.writeFile(dest, Buffer.from(buffer))
 }
 
 export async function POST(req: NextRequest) {
