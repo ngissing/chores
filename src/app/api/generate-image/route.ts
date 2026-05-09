@@ -43,16 +43,19 @@ export async function POST(req: NextRequest) {
     const ai = new GoogleGenAI({ apiKey: process.env.GOOGLE_API_KEY })
     const prompt = buildPrompt(chore_name, appearance)
 
-    const response = await ai.models.generateImages({
-      model: 'imagen-3.0-generate-002',
-      prompt,
-      config: { numberOfImages: 1, outputMimeType: 'image/png' },
+    const response = await ai.models.generateContent({
+      model: 'nano-banana-pro-preview',
+      contents: prompt,
+      config: { responseModalities: ['IMAGE'] },
     })
 
-    const base64 = response.generatedImages?.[0]?.image?.imageBytes
-    if (!base64) throw new Error('No image data returned from Google')
+    const parts = response.candidates?.[0]?.content?.parts ?? []
+    const imgPart = parts.find((p: { inlineData?: { data: string; mimeType: string } }) => p.inlineData)
+    if (!imgPart?.inlineData?.data) throw new Error('No image data returned from Google')
 
-    const filename = `${chore_id}_${member_id}.png`
+    const { data: base64, mimeType } = imgPart.inlineData
+    const ext = mimeType === 'image/png' ? 'png' : 'jpg'
+    const filename = `${chore_id}_${member_id}.${ext}`
     const destPath = path.join(process.cwd(), 'public', 'chore-images', filename)
     fs.mkdirSync(path.dirname(destPath), { recursive: true })
     await fs.promises.writeFile(destPath, Buffer.from(base64, 'base64'))
@@ -63,6 +66,7 @@ export async function POST(req: NextRequest) {
     `).run(`/chore-images/${filename}`, chore_id, member_id)
 
     return NextResponse.json({ ok: true, image_path: `/chore-images/${filename}` })
+
   } catch (err: unknown) {
     db.prepare(`
       UPDATE chore_member_images SET image_status = 'failed'
