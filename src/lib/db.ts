@@ -79,6 +79,26 @@ function initSchema(db: Database.Database) {
     );
   `)
 
+  // Migration: add appearance column to members (idempotent)
+  try {
+    db.exec(`ALTER TABLE members ADD COLUMN appearance TEXT NOT NULL DEFAULT ''`)
+  } catch {
+    // Column already exists — safe to ignore
+  }
+
+  // Per-member chore images
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS chore_member_images (
+      chore_id     INTEGER NOT NULL,
+      member_id    INTEGER NOT NULL,
+      image_path   TEXT,
+      image_status TEXT NOT NULL DEFAULT 'pending',
+      PRIMARY KEY (chore_id, member_id),
+      FOREIGN KEY (chore_id)  REFERENCES chores(id)  ON DELETE CASCADE,
+      FOREIGN KEY (member_id) REFERENCES members(id) ON DELETE CASCADE
+    )
+  `)
+
   // Seed default settings
   const defaults: [string, string][] = [
     ['morning_start_time', '06:00'],

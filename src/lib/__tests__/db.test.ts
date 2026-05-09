@@ -29,3 +29,28 @@ test('members table has streak columns', () => {
   expect(cols).toContain('streak_days')
   expect(cols).toContain('last_streak_date')
 })
+
+test('members table has appearance column', () => {
+  const db = getDb()
+  const info = db.prepare('PRAGMA table_info(members)').all() as { name: string }[]
+  expect(info.map((c) => c.name)).toContain('appearance')
+})
+
+test('chore_member_images table exists', () => {
+  const db = getDb()
+  const tables = db
+    .prepare("SELECT name FROM sqlite_master WHERE type='table'")
+    .all()
+    .map((r: { name: string }) => r.name)
+  expect(tables).toContain('chore_member_images')
+})
+
+test('chore_member_images has correct columns', () => {
+  const db = getDb()
+  const info = db.prepare('PRAGMA table_info(chore_member_images)').all() as { name: string }[]
+  const cols = info.map((c) => c.name)
+  expect(cols).toContain('chore_id')
+  expect(cols).toContain('member_id')
+  expect(cols).toContain('image_path')
+  expect(cols).toContain('image_status')
+})
