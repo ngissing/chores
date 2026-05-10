@@ -30,16 +30,14 @@ export default function ChoreCard({
         border: `3px solid ${completed ? accentColour : 'rgba(255,255,255,0.1)'}`,
         display: 'grid',
         gridTemplateRows: '1fr auto',
-        contain: 'strict',
-        containerType: 'inline-size',
-        boxShadow: completed ? `0 0 16px ${accentColour}66` : undefined,
+        boxShadow: completed ? `0 0 20px ${accentColour}88` : undefined,
       }}
     >
       {/* Image area */}
       <div className="w-full overflow-hidden flex items-center justify-center bg-white" style={{ minHeight: 0 }}>
         {imageStatus === 'ready' && imagePath ? (
           // eslint-disable-next-line @next/next/no-img-element
-          <img src={imagePath} alt={name} className="w-full h-full object-contain" style={{ opacity: completed ? 0.45 : 1 }} />
+          <img src={imagePath} alt={name} className="w-full h-full object-contain" style={{ opacity: completed ? 0.35 : 1 }} />
         ) : (
           <span
             className="text-4xl"
@@ -52,11 +50,12 @@ export default function ChoreCard({
 
       {/* Label */}
       <div
-        className="px-2 py-2 text-center font-extrabold leading-tight"
+        className="text-center font-extrabold leading-snug"
         style={{
-          fontSize: 'clamp(0.75rem, 1.8cqw, 1.1rem)',
-          background: completed ? accentColour : 'rgba(0,0,0,0.55)',
-          color: completed ? '#fff' : 'rgba(255,255,255,0.95)',
+          fontSize: 'clamp(1rem, 2.2vw, 2rem)',
+          padding: 'clamp(0.5rem, 1.2vw, 1.25rem) clamp(0.4rem, 1vw, 1rem)',
+          background: completed ? accentColour : 'rgba(0,0,0,0.6)',
+          color: '#fff',
           letterSpacing: '0.01em',
         }}
       >
@@ -65,11 +64,8 @@ export default function ChoreCard({
 
       {/* Completed overlay — big centred tick */}
       {completed && (
-        <div className="absolute inset-0 flex items-center justify-center" style={{ paddingBottom: '2.5rem' }}>
-          <span
-            className="drop-shadow-lg"
-            style={{ fontSize: 'clamp(2.5rem, 8cqw, 5rem)', lineHeight: 1 }}
-          >
+        <div className="absolute inset-0 flex items-center justify-center" style={{ paddingBottom: '15%' }}>
+          <span style={{ fontSize: 'min(30vw, 30vh, 8rem)', lineHeight: 1, filter: 'drop-shadow(0 4px 8px rgba(0,0,0,0.4))' }}>
             ✅
           </span>
         </div>
