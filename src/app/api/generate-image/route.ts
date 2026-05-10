@@ -49,13 +49,13 @@ export async function POST(req: NextRequest) {
       config: { responseModalities: ['IMAGE'] },
     })
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const parts: any[] = response.candidates?.[0]?.content?.parts ?? []
-    const imgPart = parts.find((p: any) => p.inlineData?.data)
+    type ImagePart = { inlineData?: { data?: string; mimeType?: string } }
+    const parts = (response.candidates?.[0]?.content?.parts ?? []) as ImagePart[]
+    const imgPart = parts.find(p => p.inlineData?.data)
     if (!imgPart?.inlineData?.data) throw new Error('No image data returned from Google')
 
     const base64 = imgPart.inlineData.data as string
-    const mimeType = (imgPart.inlineData.mimeType ?? 'image/jpeg') as string
+    const mimeType = imgPart.inlineData.mimeType ?? 'image/jpeg'
     const ext = mimeType === 'image/png' ? 'png' : 'jpg'
     const filename = `${chore_id}_${member_id}.${ext}`
     const destPath = path.join(process.cwd(), 'public', 'chore-images', filename)
