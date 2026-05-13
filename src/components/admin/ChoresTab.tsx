@@ -16,6 +16,17 @@ export default function ChoresTab() {
   const { members } = useMembers()
   const [editing, setEditing] = useState<ChoreForm | null>(null)
 
+  const triggerGeneration = (choreId: number, choreName: string, memberIds: number[]) => {
+    for (const mid of memberIds) {
+      fetch('/api/generate-image', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ chore_id: choreId, chore_name: choreName, member_id: mid }),
+      })
+    }
+    setTimeout(() => mutate(), 500)
+  }
+
   const save = async () => {
     if (!editing) return
     const isNew = !editing.id
@@ -28,16 +39,17 @@ export default function ChoresTab() {
       const created = await res.json() as { id: number; name: string }
       mutate()
       if (created?.id && editing.member_ids.length > 0) {
-        for (const mid of editing.member_ids) {
-          fetch('/api/generate-image', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ chore_id: created.id, chore_name: created.name, member_id: mid }),
-          })
-        }
+        triggerGeneration(created.id, created.name, editing.member_ids)
       }
     } else {
+      // Generate images for any newly added members
+      const existing = chores?.find(c => c.id === editing.id)
+      const prevIds = existing?.member_ids ?? []
+      const newIds = editing.member_ids.filter(mid => !prevIds.includes(mid))
       mutate()
+      if (newIds.length > 0) {
+        triggerGeneration(editing.id!, editing.name, newIds)
+      }
     }
     setEditing(null)
   }
@@ -52,16 +64,6 @@ export default function ChoresTab() {
     mutate()
   }
 
-  const retryImage = (c: Chore) => {
-    for (const mid of c.member_ids) {
-      fetch('/api/generate-image', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ chore_id: c.id, chore_name: c.name, member_id: mid }),
-      })
-    }
-    setTimeout(() => mutate(), 500)
-  }
 
   const toggleMember = (mid: number) =>
     setEditing((prev) => {
@@ -98,11 +100,14 @@ export default function ChoresTab() {
             <div className="font-bold text-white text-sm">{c.name}</div>
             <div className="text-xs text-white/50">{c.routine} · {c.points}pt</div>
           </div>
-          {c.image_status === 'failed' && (
-            <button onClick={() => retryImage(c)}
-              className="px-2 py-1 rounded-lg text-xs font-bold text-yellow-400"
-              style={{ background: 'rgba(234,179,8,0.1)' }}>Retry</button>
-          )}
+          <button onClick={() => triggerGeneration(c.id, c.name, c.member_ids)}
+            className="px-2 py-1 rounded-lg text-xs font-bold"
+            style={{
+              background: c.image_status === 'failed' ? 'rgba(234,179,8,0.1)' : 'rgba(255,255,255,0.06)',
+              color: c.image_status === 'failed' ? '#facc15' : 'rgba(255,255,255,0.4)',
+            }}>
+            {c.image_status === 'failed' ? 'Retry' : '↻'}
+          </button>
           <button onClick={() => setEditing({ id: c.id, name: c.name, points: c.points, routine: c.routine, member_ids: c.member_ids })}
             className="px-3 py-1 rounded-lg text-xs font-bold text-white/60"
             style={{ background: 'rgba(255,255,255,0.08)' }}>Edit</button>
