@@ -65,9 +65,9 @@ export async function POST(req: NextRequest) {
     db.prepare(`
       UPDATE chore_member_images SET image_path = ?, image_status = 'ready'
       WHERE chore_id = ? AND member_id = ?
-    `).run(`/chore-images/${filename}`, chore_id, member_id)
+    `).run(`/api/chore-image/${filename}`, chore_id, member_id)
 
-    return NextResponse.json({ ok: true, image_path: `/chore-images/${filename}` })
+    return NextResponse.json({ ok: true, image_path: `/api/chore-image/${filename}` })
 
   } catch (err: unknown) {
     db.prepare(`
