@@ -26,33 +26,38 @@ export default function BottomBar({
 
   return (
     <div
-      className="flex items-center gap-4 px-4 py-2 flex-shrink-0"
+      className="flex items-center gap-4 px-5 flex-shrink-0"
       style={{
-        background: 'rgba(0,0,0,0.35)',
-        borderTop: '1px solid rgba(255,255,255,0.07)',
+        background: 'rgba(0,0,0,0.45)',
+        borderTop: '1px solid rgba(255,255,255,0.1)',
+        minHeight: '5rem',
       }}
     >
       {/* Unallocated points — tap to cash in */}
       <button
         onClick={() => memberId && unallocatedCents > 0 && router.push(`/cashin/${memberId}`)}
         disabled={unallocatedCents === 0}
-        className="flex flex-col items-start transition-opacity"
-        style={{ opacity: unallocatedCents > 0 ? 1 : 0.4 }}
+        className="flex flex-col items-start transition-opacity active:scale-95"
+        style={{
+          opacity: unallocatedCents > 0 ? 1 : 0.4,
+          minWidth: '5rem',
+          padding: '0.5rem 0.75rem 0.5rem 0',
+        }}
       >
         <span
-          className="text-2xl font-bold leading-tight"
-          style={{ fontFamily: 'var(--font-fredoka)', color: accentColour }}
+          className="font-bold leading-tight"
+          style={{ fontFamily: 'var(--font-fredoka)', color: accentColour, fontSize: '2rem' }}
         >
           {unallocatedDisplay}
         </span>
-        <span className="text-xs text-white/40">
-          {unallocatedCents > 0 ? 'tap to cash in' : 'unallocated'}
+        <span className="text-white/50" style={{ fontSize: '0.8rem' }}>
+          {unallocatedCents > 0 ? 'tap to cash in ›' : 'unallocated'}
         </span>
       </button>
 
       {/* Streak badge */}
       {streakDays > 1 && (
-        <div className="flex items-center gap-1 text-sm font-bold text-orange-400">
+        <div className="flex items-center gap-1 font-bold text-orange-400" style={{ fontSize: '1rem' }}>
           🔥 {streakDays}
         </div>
       )}
@@ -60,17 +65,17 @@ export default function BottomBar({
       <div className="flex-1" />
 
       {/* Bucket balances */}
-      <div className="flex gap-4 text-sm">
+      <div className="flex gap-5">
         {[
           { label: '🛍️ Spend', val: spendDisplay, col: '#fb923c' },
           { label: '🏦 Save', val: saveDisplay, col: '#60a5fa' },
           { label: '🤝 Give', val: giveDisplay, col: '#4ade80' },
         ].map(({ label, val, col }) => (
-          <div key={label} className="text-center">
-            <div className="font-bold" style={{ color: col }}>
+          <div key={label} className="flex flex-col items-center gap-0.5">
+            <div className="font-bold" style={{ color: col, fontSize: '1.2rem' }}>
               {val}
             </div>
-            <div className="text-white/40 text-xs">{label}</div>
+            <div className="text-white/40" style={{ fontSize: '0.75rem' }}>{label}</div>
           </div>
         ))}
       </div>
@@ -78,7 +83,8 @@ export default function BottomBar({
       {/* Admin gear */}
       <button
         onClick={() => router.push('/admin')}
-        className="text-2xl text-white/30 hover:text-white/70 transition-colors ml-2"
+        className="text-white/30 hover:text-white/70 transition-colors"
+        style={{ fontSize: '1.75rem', padding: '0.5rem', marginLeft: '0.25rem' }}
       >
         ⚙
       </button>
