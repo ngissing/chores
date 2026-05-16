@@ -66,15 +66,6 @@ test('chore_member_images enforces FK on chore_id', () => {
   }).toThrow()
 })
 
-test('gold_chores table exists', () => {
-  const db = getDb()
-  const tables = db
-    .prepare("SELECT name FROM sqlite_master WHERE type='table'")
-    .all()
-    .map((r: { name: string }) => r.name)
-  expect(tables).toContain('gold_chores')
-})
-
 test('gold_chores has correct columns', () => {
   const db = getDb()
   const info = db.prepare('PRAGMA table_info(gold_chores)').all() as { name: string }[]
