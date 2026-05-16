@@ -1,5 +1,5 @@
 'use client'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import useSWR from 'swr'
 import { useMembers } from '@/hooks/useMembers'
@@ -22,6 +22,10 @@ export default function HomePage() {
   const { chores, completedIds, mutateCompletions } = useChores(activeMemberId, routine, today)
   const points = usePoints(activeMemberId)
   const { goldChores, mutate: mutateGoldChores } = useGoldChores()
+  const handleGoldAwarded = useCallback(() => {
+    mutateGoldChores()
+    points.mutate()
+  }, [mutateGoldChores, points])
 
   // Auto-select first member on load
   useEffect(() => {
@@ -170,7 +174,7 @@ export default function HomePage() {
           goldChores={goldChores}
           members={members}
           activeMemberId={activeMemberId}
-          onGoldAwarded={() => { mutateGoldChores(); points.mutate() }}
+          onGoldAwarded={handleGoldAwarded}
         />
       </div>
 

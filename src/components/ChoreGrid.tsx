@@ -1,6 +1,8 @@
 'use client'
 import { computeGridLayout } from '@/lib/grid'
 import ChoreCard from './ChoreCard'
+
+const noop = () => {}
 import GoldChoreCard from './GoldChoreCard'
 import type { Chore } from '@/hooks/useChores'
 import type { GoldChore } from '@/hooks/useGoldChores'
@@ -73,7 +75,7 @@ export default function ChoreGrid({
           points={gc.points}
           members={members}
           activeMemberId={activeMemberId}
-          onAwarded={onGoldAwarded ?? (() => {})}
+          onAwarded={onGoldAwarded ?? noop}
         />
       ))}
     </div>
