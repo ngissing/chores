@@ -5,12 +5,14 @@ import ChoresTab from './ChoresTab'
 import ScheduleTab from './ScheduleTab'
 import PointsPayTab from './PointsPayTab'
 import ChangePinTab from './ChangePinTab'
+import GoldTab from './GoldTab'
 
-type Tab = 'members' | 'chores' | 'schedule' | 'points' | 'pin'
+type Tab = 'members' | 'chores' | 'schedule' | 'points' | 'pin' | 'gold'
 
 const TABS: { id: Tab; label: string; icon: string }[] = [
   { id: 'members',  label: 'Members',      icon: '👨‍👩‍👧‍👦' },
   { id: 'chores',   label: 'Chores',       icon: '📋' },
+  { id: 'gold',     label: 'Gold Chores',  icon: '⭐' },
   { id: 'schedule', label: 'Schedule',     icon: '🕐' },
   { id: 'points',   label: 'Points & Pay', icon: '💰' },
   { id: 'pin',      label: 'Change PIN',   icon: '🔒' },
@@ -41,6 +43,7 @@ export default function AdminShell() {
       <div className="flex-1 min-h-0 overflow-y-auto p-4">
         {tab === 'members'  && <MembersTab />}
         {tab === 'chores'   && <ChoresTab />}
+        {tab === 'gold'     && <GoldTab />}
         {tab === 'schedule' && <ScheduleTab />}
         {tab === 'points'   && <PointsPayTab />}
         {tab === 'pin'      && <ChangePinTab />}
