@@ -15,6 +15,9 @@ export async function POST(
       | { value: string }
       | undefined
   )?.value ?? ''
+  if (!hash) {
+    return NextResponse.json({ ok: false, error: 'NO_PIN_SET' }, { status: 403 })
+  }
   const pinOk = await verifyPin(pin, hash)
   if (!pinOk) {
     return NextResponse.json({ ok: false, error: 'Invalid PIN' }, { status: 401 })

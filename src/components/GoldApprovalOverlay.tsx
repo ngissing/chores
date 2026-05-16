@@ -29,6 +29,7 @@ export default function GoldApprovalOverlay({
   const [locked, setLocked] = useState(false)
   const [lockSeconds, setLockSeconds] = useState(0)
   const [, setAttempts] = useState(0)
+  const [noPinSet, setNoPinSet] = useState(false)
   const lockRef = useRef<NodeJS.Timeout | null>(null)
 
   useEffect(() => {
@@ -49,10 +50,15 @@ export default function GoldApprovalOverlay({
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ member_id: selectedId, pin: p }),
     })
-    const data = await res.json() as { ok?: boolean; earned_cents?: number }
+    const data = await res.json() as { ok?: boolean; earned_cents?: number; error?: string }
     if (data.ok) {
       onSuccess(data.earned_cents ?? 0)
     } else {
+      if ((data as { error?: string }).error === 'NO_PIN_SET') {
+        setNoPinSet(true)
+        setPin('')
+        return
+      }
       setShake(true)
       setPin('')
       setTimeout(() => setShake(false), 500)
@@ -106,7 +112,9 @@ export default function GoldApprovalOverlay({
           >
             ⭐ {choreName}
           </div>
-          <div className="text-white/50 text-sm mt-1">Award {chorePoints} pts to:</div>
+          <div className="text-white/50 text-sm mt-1">
+            Awarding to {selectedMember?.name ?? '…'} · {chorePoints} pts
+          </div>
         </div>
 
         {/* Member selector */}
@@ -133,42 +141,50 @@ export default function GoldApprovalOverlay({
           </div>
         )}
 
-        {/* PIN dots */}
-        <div className="flex gap-3">
-          {[0,1,2,3].map((i) => (
-            <div
-              key={i}
-              className="w-5 h-5 rounded-full border-2"
-              style={{
-                borderColor: 'rgba(245,158,11,0.4)',
-                background: pin.length > i ? '#f59e0b' : 'transparent',
-              }}
-            />
-          ))}
-        </div>
+        {noPinSet ? (
+          <div className="text-amber-300 text-sm text-center px-4">
+            Ask a parent to set up a PIN in Settings first.
+          </div>
+        ) : (
+          <>
+            {/* PIN dots */}
+            <div className="flex gap-3">
+              {[0,1,2,3].map((i) => (
+                <div
+                  key={i}
+                  className="w-5 h-5 rounded-full border-2"
+                  style={{
+                    borderColor: 'rgba(245,158,11,0.4)',
+                    background: pin.length > i ? '#f59e0b' : 'transparent',
+                  }}
+                />
+              ))}
+            </div>
 
-        {locked && (
-          <div className="text-red-400 text-sm">Locked — try again in {lockSeconds}s</div>
+            {locked && (
+              <div className="text-red-400 text-sm">Locked — try again in {lockSeconds}s</div>
+            )}
+
+            {/* Numpad */}
+            <div className="grid grid-cols-3 gap-3">
+              {digits.map((d, i) => (
+                <button
+                  key={i}
+                  onClick={() => {
+                    if (locked) return
+                    if (d === '⌫') setPin((p) => p.slice(0, -1))
+                    else if (d) press(d)
+                  }}
+                  disabled={locked || d === ''}
+                  className="w-16 h-16 rounded-2xl text-xl font-bold text-white transition-all active:scale-95"
+                  style={{ background: d ? 'rgba(255,255,255,0.1)' : 'transparent' }}
+                >
+                  {d}
+                </button>
+              ))}
+            </div>
+          </>
         )}
-
-        {/* Numpad */}
-        <div className="grid grid-cols-3 gap-3">
-          {digits.map((d, i) => (
-            <button
-              key={i}
-              onClick={() => {
-                if (locked) return
-                if (d === '⌫') setPin((p) => p.slice(0, -1))
-                else if (d) press(d)
-              }}
-              disabled={locked || d === ''}
-              className="w-16 h-16 rounded-2xl text-xl font-bold text-white transition-all active:scale-95"
-              style={{ background: d ? 'rgba(255,255,255,0.1)' : 'transparent' }}
-            >
-              {d}
-            </button>
-          ))}
-        </div>
       </div>
 
       <style>{`
