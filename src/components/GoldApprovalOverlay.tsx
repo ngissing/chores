@@ -31,56 +31,71 @@ export default function GoldApprovalOverlay({
   const [, setAttempts] = useState(0)
   const [noPinSet, setNoPinSet] = useState(false)
   const lockRef = useRef<NodeJS.Timeout | null>(null)
+  const submitting = useRef(false)
 
   useEffect(() => {
     return () => { if (lockRef.current) clearInterval(lockRef.current) }
   }, [])
 
   const press = (digit: string) => {
-    if (locked || !selectedId) return
+    if (locked || !selectedId || pin.length >= 4) return
     const next = pin + digit
     setPin(next)
     if (next.length === 4) award(next)
   }
 
   const award = async (p: string) => {
-    if (!selectedId) return
-    const res = await fetch(`/api/gold-chores/${choreId}/award`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ member_id: selectedId, pin: p }),
-    })
-    const data = await res.json() as { ok?: boolean; earned_cents?: number; error?: string }
-    if (data.ok) {
-      onSuccess(data.earned_cents ?? 0)
-    } else {
-      if ((data as { error?: string }).error === 'NO_PIN_SET') {
-        setNoPinSet(true)
+    if (!selectedId || submitting.current) return
+    submitting.current = true
+    try {
+      let data: { ok?: boolean; earned_cents?: number; error?: string }
+      try {
+        const res = await fetch(`/api/gold-chores/${choreId}/award`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ member_id: selectedId, pin: p }),
+        })
+        data = await res.json() as { ok?: boolean; earned_cents?: number; error?: string }
+      } catch {
+        setShake(true)
         setPin('')
+        setTimeout(() => setShake(false), 500)
         return
       }
-      setShake(true)
-      setPin('')
-      setTimeout(() => setShake(false), 500)
-      setAttempts((prev) => {
-        const next = prev + 1
-        if (next >= 3) {
-          setLocked(true)
-          let secs = 30
-          setLockSeconds(secs)
-          const tick = setInterval(() => {
-            secs -= 1
-            setLockSeconds(secs)
-            if (secs <= 0) {
-              clearInterval(tick)
-              setLocked(false)
-              setAttempts(0)
-            }
-          }, 1000)
-          lockRef.current = tick
+      if (data.ok) {
+        onSuccess(data.earned_cents ?? 0)
+      } else {
+        if (data.error === 'NO_PIN_SET') {
+          setNoPinSet(true)
+          setPin('')
+          return
         }
-        return next
-      })
+        setShake(true)
+        setPin('')
+        setTimeout(() => setShake(false), 500)
+        setAttempts((prev) => {
+          const next = prev + 1
+          if (next >= 3) {
+            setLocked(true)
+            let secs = 30
+            setLockSeconds(secs)
+            if (lockRef.current) clearInterval(lockRef.current)
+            const tick = setInterval(() => {
+              secs -= 1
+              setLockSeconds(secs)
+              if (secs <= 0) {
+                clearInterval(tick)
+                setLocked(false)
+                setAttempts(0)
+              }
+            }, 1000)
+            lockRef.current = tick
+          }
+          return next
+        })
+      }
+    } finally {
+      submitting.current = false
     }
   }
 
@@ -122,7 +137,7 @@ export default function GoldApprovalOverlay({
           {members.map((m) => (
             <button
               key={m.id}
-              onClick={() => setSelectedId(m.id)}
+              onClick={() => { setSelectedId(m.id); setNoPinSet(false); setPin('') }}
               className="px-4 py-2 rounded-xl text-sm font-bold transition-all"
               style={{
                 background: selectedId === m.id ? m.colour : 'rgba(255,255,255,0.08)',
