@@ -28,14 +28,20 @@ export default function GoldChoreCard({
 
   const handleSuccess = async () => {
     setShowOverlay(false)
-    const { default: confetti } = await import('canvas-confetti')
-    confetti({ particleCount: 200, spread: 90, origin: { y: 0.6 } })
+    try {
+      const { default: confetti } = await import('canvas-confetti')
+      confetti({ particleCount: 200, spread: 90, origin: { y: 0.6 } })
+    } catch {
+      // confetti is non-critical; continue
+    }
     onAwarded()
   }
 
   return (
     <>
       <button
+        type="button"
+        aria-label={`Award gold chore: ${name}`}
         onClick={() => setShowOverlay(true)}
         className="relative rounded-2xl overflow-hidden transition-all duration-200 active:scale-95 w-full h-full"
         style={{
@@ -55,10 +61,7 @@ export default function GoldChoreCard({
             // eslint-disable-next-line @next/next/no-img-element
             <img src={imagePath} alt={name} className="w-full h-full object-contain" />
           ) : (
-            <span
-              className="text-4xl"
-              style={{ animation: imageStatus === 'pending' ? 'pulse 2s infinite' : undefined }}
-            >
+            <span className={`text-4xl${imageStatus === 'pending' ? ' animate-pulse' : ''}`}>
               {imageStatus === 'failed' ? '⚠️' : '⏳'}
             </span>
           )}
@@ -66,6 +69,7 @@ export default function GoldChoreCard({
 
         {/* Gold label */}
         <div
+          aria-hidden="true"
           className="text-center font-extrabold leading-snug"
           style={{
             fontSize: 'clamp(1rem, 2.2vw, 2rem)',
