@@ -5,6 +5,7 @@ import useSWR from 'swr'
 import { useMembers } from '@/hooks/useMembers'
 import { useChores } from '@/hooks/useChores'
 import { usePoints } from '@/hooks/usePoints'
+import { useGoldChores } from '@/hooks/useGoldChores'
 import { useRoutine } from '@/hooks/useRoutine'
 import MemberSelector from '@/components/MemberSelector'
 import ChoreGrid from '@/components/ChoreGrid'
@@ -20,6 +21,7 @@ export default function HomePage() {
   const today = new Date().toISOString().slice(0, 10)
   const { chores, completedIds, mutateCompletions } = useChores(activeMemberId, routine, today)
   const points = usePoints(activeMemberId)
+  const { goldChores, mutate: mutateGoldChores } = useGoldChores()
 
   // Auto-select first member on load
   useEffect(() => {
@@ -165,6 +167,10 @@ export default function HomePage() {
           accentColour={accentColour}
           pendingIds={pendingIds}
           onToggle={handleToggle}
+          goldChores={goldChores}
+          members={members}
+          activeMemberId={activeMemberId}
+          onGoldAwarded={() => { mutateGoldChores(); points.mutate() }}
         />
       </div>
 
