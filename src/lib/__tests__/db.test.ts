@@ -15,6 +15,7 @@ test('schema initialises all tables', () => {
   expect(tables).toContain('point_transactions')
   expect(tables).toContain('settings')
   expect(tables).toContain('chore_member_images')
+  expect(tables).toContain('gold_chores')
 })
 
 test('default settings are seeded', () => {
@@ -63,4 +64,27 @@ test('chore_member_images enforces FK on chore_id', () => {
       "INSERT INTO chore_member_images (chore_id, member_id, image_path, image_status) VALUES (999999, 1, '/fake/path.png', 'pending')"
     ).run()
   }).toThrow()
+})
+
+test('gold_chores table exists', () => {
+  const db = getDb()
+  const tables = db
+    .prepare("SELECT name FROM sqlite_master WHERE type='table'")
+    .all()
+    .map((r: { name: string }) => r.name)
+  expect(tables).toContain('gold_chores')
+})
+
+test('gold_chores has correct columns', () => {
+  const db = getDb()
+  const info = db.prepare('PRAGMA table_info(gold_chores)').all() as { name: string }[]
+  const cols = info.map((c) => c.name)
+  expect(cols).toContain('id')
+  expect(cols).toContain('name')
+  expect(cols).toContain('points')
+  expect(cols).toContain('image_path')
+  expect(cols).toContain('image_status')
+  expect(cols).toContain('status')
+  expect(cols).toContain('awarded_to_member_id')
+  expect(cols).toContain('awarded_at')
 })

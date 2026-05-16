@@ -99,6 +99,22 @@ function initSchema(db: Database.Database) {
     )
   `)
 
+  // Gold chores
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS gold_chores (
+      id                   INTEGER PRIMARY KEY AUTOINCREMENT,
+      name                 TEXT NOT NULL,
+      description          TEXT,
+      points               INTEGER NOT NULL DEFAULT 10,
+      image_path           TEXT,
+      image_status         TEXT NOT NULL DEFAULT 'pending',
+      status               TEXT NOT NULL DEFAULT 'available',
+      awarded_to_member_id INTEGER REFERENCES members(id) ON DELETE SET NULL,
+      awarded_at           DATETIME,
+      created_at           DATETIME DEFAULT CURRENT_TIMESTAMP
+    )
+  `)
+
   // Seed default settings
   const defaults: [string, string][] = [
     ['morning_start_time', '06:00'],
