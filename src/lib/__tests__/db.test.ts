@@ -87,4 +87,6 @@ test('gold_chores has correct columns', () => {
   expect(cols).toContain('status')
   expect(cols).toContain('awarded_to_member_id')
   expect(cols).toContain('awarded_at')
+  expect(cols).toContain('description')
+  expect(cols).toContain('created_at')
 })
