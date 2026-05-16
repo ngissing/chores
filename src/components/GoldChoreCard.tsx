@@ -26,6 +26,7 @@ export default function GoldChoreCard({
 }: Props) {
   const [showOverlay, setShowOverlay] = useState(false)
 
+  // earnedCents is intentionally not forwarded — the parent revalidates via SWR mutate()
   const handleSuccess = async () => {
     setShowOverlay(false)
     try {
