@@ -1,5 +1,6 @@
 'use client'
 import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import useSWR from 'swr'
 import { useMembers } from '@/hooks/useMembers'
 import { useChores } from '@/hooks/useChores'
@@ -7,11 +8,11 @@ import { usePoints } from '@/hooks/usePoints'
 import { useRoutine } from '@/hooks/useRoutine'
 import MemberSelector from '@/components/MemberSelector'
 import ChoreGrid from '@/components/ChoreGrid'
-import BottomBar from '@/components/BottomBar'
 
 const fetcher = (url: string) => fetch(url).then((r) => r.json())
 
 export default function HomePage() {
+  const router = useRouter()
   const { members } = useMembers()
   const [activeMemberId, setActiveMemberId] = useState<number | null>(null)
   const { data: settings } = useSWR<Record<string, string>>('/api/settings', fetcher)
@@ -84,46 +85,75 @@ export default function HomePage() {
         }}
       />
 
-      {/* Top bar */}
+      {/* Top bar — finance info + settings */}
       <div
-        className="relative z-10 flex items-center px-4 py-2 flex-shrink-0"
+        className="relative z-10 flex items-center gap-3 px-4 flex-shrink-0"
         style={{
-          background: 'rgba(0,0,0,0.3)',
-          borderBottom: '1px solid rgba(255,255,255,0.07)',
+          background: 'rgba(0,0,0,0.4)',
+          borderBottom: '1px solid rgba(255,255,255,0.08)',
+          minHeight: '4rem',
         }}
       >
-        <span
-          className="text-xl mr-3"
-          style={{ fontFamily: 'var(--font-fredoka)', color: accentColour }}
-        >
+        {/* Logo + routine */}
+        <span className="font-bold text-lg" style={{ fontFamily: 'var(--font-fredoka)', color: accentColour }}>
           ⭐ ChoreChart
         </span>
-        <span
-          className="text-sm font-bold px-3 py-1 rounded-full text-white"
-          style={{ background: `${accentColour}33` }}
-        >
+        <span className="text-xs font-bold px-2 py-1 rounded-full text-white"
+          style={{ background: `${accentColour}33` }}>
           {routineLabel}
         </span>
-        <span className="ml-auto text-sm text-white/50">{dateLabel}</span>
+
+        <div className="flex-1" />
+
+        {/* Cash-in button */}
+        <button
+          onClick={() => activeMemberId && points.unallocated > 0 && router.push(`/cashin/${activeMemberId}`)}
+          disabled={points.unallocated === 0}
+          className="flex flex-col items-center transition-opacity active:scale-95"
+          style={{ opacity: points.unallocated > 0 ? 1 : 0.35 }}
+        >
+          <span className="font-bold leading-tight" style={{ fontFamily: 'var(--font-fredoka)', color: accentColour, fontSize: '1.6rem' }}>
+            {points.unallocatedDisplay}
+          </span>
+          <span className="text-white/40" style={{ fontSize: '0.65rem' }}>
+            {points.unallocated > 0 ? 'tap to cash in' : 'unallocated'}
+          </span>
+        </button>
+
+        <div style={{ width: '1px', height: '2rem', background: 'rgba(255,255,255,0.1)' }} />
+
+        {/* Bucket totals */}
+        <div className="flex gap-3">
+          {[
+            { label: '🛍️', val: points.spendDisplay, col: '#fb923c' },
+            { label: '🏦', val: points.saveDisplay, col: '#60a5fa' },
+            { label: '🤝', val: points.giveDisplay, col: '#4ade80' },
+          ].map(({ label, val, col }) => (
+            <div key={label} className="flex flex-col items-center">
+              <div className="font-bold" style={{ color: col, fontSize: '1rem' }}>{val}</div>
+              <div className="text-white/40" style={{ fontSize: '0.6rem' }}>{label}</div>
+            </div>
+          ))}
+        </div>
+
+        {/* Streak */}
+        {(activeMember?.streak_days ?? 0) > 1 && (
+          <span className="font-bold text-orange-400 text-sm">🔥{activeMember!.streak_days}</span>
+        )}
+
+        {/* Settings gear */}
+        <button onClick={() => router.push('/admin')}
+          className="text-white/30 hover:text-white/70 transition-colors"
+          style={{ fontSize: '1.5rem', padding: '0.4rem' }}>
+          ⚙
+        </button>
       </div>
 
-      {/* Member selector */}
-      <div className="relative z-10">
-        <MemberSelector
-          members={members}
-          activeMemberId={activeMemberId}
-          onSelect={setActiveMemberId}
-        />
-      </div>
-
-      {/* When-Then motivational prompt — shown before any chores are done */}
+      {/* When-Then motivational prompt */}
       {activeMember && completedIds.size === 0 && chores.length > 0 && (
         <div className="relative z-10 text-center text-sm py-1 text-white/40 italic">
           When you finish your chores, you will earn{' '}
-          <span style={{ color: accentColour }}>
-            {chores.reduce((s, c) => s + c.points, 0)} pts
-          </span>
-          !
+          <span style={{ color: accentColour }}>{chores.reduce((s, c) => s + c.points, 0)} pts</span>!
         </div>
       )}
 
@@ -138,17 +168,12 @@ export default function HomePage() {
         />
       </div>
 
-      {/* Bottom bar */}
+      {/* Bottom bar — member selector */}
       <div className="relative z-10">
-        <BottomBar
-          memberId={activeMemberId}
-          unallocatedDisplay={points.unallocatedDisplay}
-          unallocatedCents={points.unallocated}
-          spendDisplay={points.spendDisplay}
-          saveDisplay={points.saveDisplay}
-          giveDisplay={points.giveDisplay}
-          accentColour={accentColour}
-          streakDays={activeMember?.streak_days ?? 0}
+        <MemberSelector
+          members={members}
+          activeMemberId={activeMemberId}
+          onSelect={setActiveMemberId}
         />
       </div>
     </div>
