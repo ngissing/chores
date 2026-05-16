@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getDb } from '@/lib/db'
 
+export const dynamic = 'force-dynamic'
+
 // GET /api/gold-chores — returns all gold chores (both available and awarded)
 export function GET() {
   const rows = getDb()
