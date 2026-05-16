@@ -26,9 +26,9 @@ export default function GoldApprovalOverlay({
   )
   const [pin, setPin] = useState('')
   const [shake, setShake] = useState(false)
-  const [attempts, setAttempts] = useState(0)
   const [locked, setLocked] = useState(false)
   const [lockSeconds, setLockSeconds] = useState(0)
+  const [, setAttempts] = useState(0)
   const lockRef = useRef<NodeJS.Timeout | null>(null)
 
   useEffect(() => {
@@ -53,26 +53,28 @@ export default function GoldApprovalOverlay({
     if (data.ok) {
       onSuccess(data.earned_cents ?? 0)
     } else {
-      const newAttempts = attempts + 1
-      setAttempts(newAttempts)
       setShake(true)
       setPin('')
       setTimeout(() => setShake(false), 500)
-      if (newAttempts >= 3) {
-        setLocked(true)
-        let secs = 30
-        setLockSeconds(secs)
-        const tick = setInterval(() => {
-          secs -= 1
+      setAttempts((prev) => {
+        const next = prev + 1
+        if (next >= 3) {
+          setLocked(true)
+          let secs = 30
           setLockSeconds(secs)
-          if (secs <= 0) {
-            clearInterval(tick)
-            setLocked(false)
-            setAttempts(0)
-          }
-        }, 1000)
-        lockRef.current = tick
-      }
+          const tick = setInterval(() => {
+            secs -= 1
+            setLockSeconds(secs)
+            if (secs <= 0) {
+              clearInterval(tick)
+              setLocked(false)
+              setAttempts(0)
+            }
+          }, 1000)
+          lockRef.current = tick
+        }
+        return next
+      })
     }
   }
 
@@ -155,6 +157,7 @@ export default function GoldApprovalOverlay({
             <button
               key={i}
               onClick={() => {
+                if (locked) return
                 if (d === '⌫') setPin((p) => p.slice(0, -1))
                 else if (d) press(d)
               }}
