@@ -20,14 +20,14 @@ export async function POST(
     return NextResponse.json({ ok: false, error: 'Invalid PIN' }, { status: 401 })
   }
 
-  // Check chore exists and is still available
+  // Check chore exists (pre-flight — full atomic check happens inside transaction)
   const chore = db
-    .prepare("SELECT * FROM gold_chores WHERE id = ? AND status = 'available'")
+    .prepare('SELECT id, points, name FROM gold_chores WHERE id = ?')
     .get(Number(params.id)) as
       | { id: number; points: number; name: string }
       | undefined
   if (!chore) {
-    return NextResponse.json({ ok: false, error: 'Chore not found or already awarded' }, { status: 404 })
+    return NextResponse.json({ ok: false, error: 'Chore not found' }, { status: 404 })
   }
 
   // Get member's point value
@@ -40,27 +40,42 @@ export async function POST(
 
   const earnedCents = chore.points * member.point_value_cents
 
-  db.transaction(() => {
-    // Mark chore awarded
-    db.prepare(
-      `UPDATE gold_chores
-       SET status = 'awarded', awarded_to_member_id = ?, awarded_at = CURRENT_TIMESTAMP
-       WHERE id = ?`
-    ).run(member_id, chore.id)
+  try {
+    db.transaction(() => {
+      // Atomic availability check — throws if already awarded
+      const awardResult = db.prepare(
+        `UPDATE gold_chores
+         SET status = 'awarded', awarded_to_member_id = ?, awarded_at = CURRENT_TIMESTAMP
+         WHERE id = ? AND status = 'available'`
+      ).run(member_id, chore.id)
 
-    // Credit unallocated balance
-    db.prepare(
-      `UPDATE point_balances
-       SET balance_cents = balance_cents + ?, updated_at = CURRENT_TIMESTAMP
-       WHERE member_id = ? AND bucket = 'unallocated'`
-    ).run(earnedCents, member_id)
+      if (awardResult.changes === 0) {
+        throw new Error('CHORE_ALREADY_AWARDED')
+      }
 
-    // Record transaction
-    db.prepare(
-      `INSERT INTO point_transactions (member_id, bucket, amount_cents, reason)
-       VALUES (?, 'unallocated', ?, 'gold_chore_award')`
-    ).run(member_id, earnedCents)
-  })()
+      // Upsert unallocated balance (safe even if row doesn't exist yet)
+      db.prepare(
+        `INSERT INTO point_balances (member_id, bucket, balance_cents, updated_at)
+         VALUES (?, 'unallocated', ?, CURRENT_TIMESTAMP)
+         ON CONFLICT(member_id, bucket)
+         DO UPDATE SET
+           balance_cents = balance_cents + excluded.balance_cents,
+           updated_at    = excluded.updated_at`
+      ).run(member_id, earnedCents)
+
+      // Record transaction
+      db.prepare(
+        `INSERT INTO point_transactions (member_id, bucket, amount_cents, reason)
+         VALUES (?, 'unallocated', ?, 'gold_chore_award')`
+      ).run(member_id, earnedCents)
+    })()
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : 'Unknown error'
+    if (msg === 'CHORE_ALREADY_AWARDED') {
+      return NextResponse.json({ ok: false, error: 'Chore already awarded' }, { status: 409 })
+    }
+    return NextResponse.json({ ok: false, error: 'Server error' }, { status: 500 })
+  }
 
   return NextResponse.json({ ok: true, earned_cents: earnedCents })
 }
