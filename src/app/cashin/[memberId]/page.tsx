@@ -109,13 +109,13 @@ export default function CashInPage() {
             className="text-xl font-bold"
             style={{
               fontFamily: 'var(--font-fredoka)',
-              color: remaining === 0 ? '#4ade80' : accentColour,
+              color: remaining < INCREMENT ? '#4ade80' : accentColour,
             }}
           >
             {centsToDisplay(totalCents)}
           </div>
           <div className="text-xs text-white/35">
-            {remaining === 0 ? 'all allocated' : 'to allocate'}
+            {remaining < INCREMENT ? 'all allocated' : 'to allocate'}
           </div>
         </div>
       </div>
@@ -140,6 +140,7 @@ export default function CashInPage() {
         <AllocationFooter
           totalCents={totalCents}
           remainingCents={remaining}
+          canAllocateMore={remaining >= INCREMENT}
           isConfirming={isConfirming}
           onConfirm={handleConfirm}
         />
