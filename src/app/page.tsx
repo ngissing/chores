@@ -71,11 +71,6 @@ export default function HomePage() {
   }
 
   const routineLabel = routine === 'morning' ? '☀️ MORNING' : '🌙 AFTERNOON'
-  const dateLabel = new Date().toLocaleDateString('en-AU', {
-    weekday: 'short',
-    day: 'numeric',
-    month: 'short',
-  })
 
   return (
     <div
