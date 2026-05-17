@@ -2,11 +2,13 @@
 import { useState } from 'react'
 import { useGoldChores } from '@/hooks/useGoldChores'
 import type { GoldChore } from '@/hooks/useGoldChores'
+import { useMembers } from '@/hooks/useMembers'
 
 type GoldForm = { name: string; points: number }
 
 export default function GoldTab() {
   const { allGoldChores, mutate } = useGoldChores()
+  const { members } = useMembers()
   const [form, setForm] = useState<GoldForm | null>(null)
 
   const available = allGoldChores.filter((c) => c.status === 'available')
@@ -91,7 +93,7 @@ export default function GoldTab() {
                 <div className="flex-1">
                   <div className="font-bold text-white/60 text-sm">{c.name}</div>
                   <div className="text-xs text-white/30">
-                    {c.points}pt · awarded {c.awarded_at ? new Date(c.awarded_at).toLocaleDateString() : ''}
+                    {members.find((m) => m.id === c.awarded_to_member_id)?.name ?? 'Unknown'} · {c.points}pt · {c.awarded_at ? new Date(c.awarded_at).toLocaleDateString() : ''}
                   </div>
                 </div>
               </div>
