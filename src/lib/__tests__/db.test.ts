@@ -81,3 +81,11 @@ test('gold_chores has correct columns', () => {
   expect(cols).toContain('description')
   expect(cols).toContain('created_at')
 })
+
+test('chores table has days_of_week column with default 127', () => {
+  const db = getDb()
+  const info = db.prepare('PRAGMA table_info(chores)').all() as { name: string; dflt_value: string | null }[]
+  const col = info.find((c) => c.name === 'days_of_week')
+  expect(col).toBeDefined()
+  expect(col?.dflt_value).toBe('127')
+})

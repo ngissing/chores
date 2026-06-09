@@ -86,6 +86,13 @@ function initSchema(db: Database.Database) {
     // Column already exists — safe to ignore
   }
 
+  // Day-of-week filter for chores (bitmask: bit 0=Sun … bit 6=Sat, 127=all days)
+  try {
+    db.exec(`ALTER TABLE chores ADD COLUMN days_of_week INTEGER NOT NULL DEFAULT 127`)
+  } catch {
+    // Column already exists — safe to ignore
+  }
+
   // Per-member chore images
   db.exec(`
     CREATE TABLE IF NOT EXISTS chore_member_images (
