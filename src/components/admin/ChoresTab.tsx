@@ -3,6 +3,7 @@ import { useState } from 'react'
 import useSWR from 'swr'
 import { useMembers } from '@/hooks/useMembers'
 import type { Chore } from '@/hooks/useChores'
+import { isDayEnabled } from '@/lib/chores'
 
 const fetcher = (url: string) => fetch(url).then((r) => r.json())
 
@@ -117,7 +118,7 @@ export default function ChoresTab() {
             <div className="text-xs text-white/50">
               {c.routine} · {c.points}pt
               {c.days_of_week !== 127 && (
-                <> · {DAY_LABELS.filter((_, i) => ((c.days_of_week >> i) & 1) === 1).join(' ')}</>
+                <> · {DAY_LABELS.filter((_, i) => isDayEnabled(c.days_of_week, i)).join(' ')}</>
               )}
             </div>
           </div>
@@ -162,7 +163,7 @@ export default function ChoresTab() {
               <label className="text-xs text-white/50">Days</label>
               <div className="flex gap-1">
                 {DAY_LABELS.map((label, dow) => {
-                  const active = ((editing.days_of_week >> dow) & 1) === 1
+                  const active = isDayEnabled(editing.days_of_week, dow)
                   return (
                     <button
                       key={dow}
