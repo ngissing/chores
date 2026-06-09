@@ -10,6 +10,7 @@ interface ChoreRow {
   image_status: string
   points: number
   routine: string
+  days_of_week: number
   created_at: string
 }
 
