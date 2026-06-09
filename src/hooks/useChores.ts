@@ -1,5 +1,6 @@
 'use client'
 import useSWR from 'swr'
+import { isDayEnabled } from '@/lib/chores'
 
 const fetcher = (url: string) => fetch(url).then((r) => r.json())
 
@@ -11,6 +12,7 @@ export interface Chore {
   points: number
   routine: 'morning' | 'afternoon' | 'both'
   member_ids: number[]
+  days_of_week: number
 }
 
 export interface Completion {
@@ -35,11 +37,14 @@ export function useChores(
     { refreshInterval: 5000 }
   )
 
+  const dow = new Date().getDay() // 0 = Sunday … 6 = Saturday, local time
+
   const chores = (allChores ?? []).filter(
     (c) =>
       memberId !== null &&
       c.member_ids.includes(memberId) &&
-      (c.routine === routine || c.routine === 'both')
+      (c.routine === routine || c.routine === 'both') &&
+      isDayEnabled(c.days_of_week, dow)
   )
 
   const completedIds = new Set((completions ?? []).map((c) => c.chore_id))

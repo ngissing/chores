@@ -94,11 +94,11 @@ export function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
-  const { name, points, routine, member_ids } = await req.json()
+  const { name, points, routine, member_ids, days_of_week } = await req.json()
   const db = getDb()
   const { lastInsertRowid } = db
-    .prepare('INSERT INTO chores (name, points, routine, image_status) VALUES (?, ?, ?, ?)')
-    .run(name, points ?? 1, routine ?? 'morning', 'pending')
+    .prepare('INSERT INTO chores (name, points, routine, image_status, days_of_week) VALUES (?, ?, ?, ?, ?)')
+    .run(name, points ?? 1, routine ?? 'morning', 'pending', days_of_week ?? 127)
 
   const choreId = lastInsertRowid as number
   const ins = db.prepare('INSERT INTO chore_assignments (chore_id, member_id) VALUES (?, ?)')
@@ -108,14 +108,15 @@ export async function POST(req: NextRequest) {
 }
 
 export async function PUT(req: NextRequest) {
-  const { id, name, points, routine, member_ids, image_status, image_path } = await req.json()
+  const { id, name, points, routine, member_ids, image_status, image_path, days_of_week } = await req.json()
   const db = getDb()
   db.prepare(
     `UPDATE chores SET name=?, points=?, routine=?,
       image_status=COALESCE(?, image_status),
-      image_path=COALESCE(?, image_path)
+      image_path=COALESCE(?, image_path),
+      days_of_week=COALESCE(?, days_of_week)
     WHERE id=?`
-  ).run(name, points, routine, image_status ?? null, image_path ?? null, id)
+  ).run(name, points, routine, image_status ?? null, image_path ?? null, days_of_week ?? null, id)
 
   if (member_ids !== undefined) {
     db.prepare('DELETE FROM chore_assignments WHERE chore_id=?').run(id)
