@@ -6,9 +6,15 @@ import type { Chore } from '@/hooks/useChores'
 
 const fetcher = (url: string) => fetch(url).then((r) => r.json())
 
+const DAY_LABELS = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'] as const
+
 type ChoreForm = {
-  id?: number; name: string; points: number
-  routine: 'morning' | 'afternoon' | 'both'; member_ids: number[]
+  id?: number
+  name: string
+  points: number
+  routine: 'morning' | 'afternoon' | 'both'
+  member_ids: number[]
+  days_of_week: number
 }
 
 export default function ChoresTab() {
@@ -74,12 +80,22 @@ export default function ChoresTab() {
       return { ...prev, member_ids: ids }
     })
 
+  const toggleDay = (dow: number) =>
+    setEditing((prev) => {
+      if (!prev) return prev
+      const bit = 1 << dow
+      const isOn = (prev.days_of_week & bit) !== 0
+      // Prevent deselecting the last active day
+      if (isOn && prev.days_of_week === bit) return prev
+      return { ...prev, days_of_week: isOn ? prev.days_of_week & ~bit : prev.days_of_week | bit }
+    })
+
   return (
     <div className="flex flex-col gap-4">
       <div className="flex items-center justify-between">
         <h2 className="text-lg font-bold text-white" style={{ fontFamily: 'var(--font-fredoka)' }}>Chores</h2>
         <button
-          onClick={() => setEditing({ name: '', points: 1, routine: 'morning', member_ids: [] })}
+          onClick={() => setEditing({ name: '', points: 1, routine: 'morning', member_ids: [], days_of_week: 127 })}
           className="px-4 py-2 rounded-xl text-sm font-bold text-white" style={{ background: '#6366f1' }}>
           + Add Chore
         </button>
@@ -98,7 +114,12 @@ export default function ChoresTab() {
           </div>
           <div className="flex-1">
             <div className="font-bold text-white text-sm">{c.name}</div>
-            <div className="text-xs text-white/50">{c.routine} · {c.points}pt</div>
+            <div className="text-xs text-white/50">
+              {c.routine} · {c.points}pt
+              {c.days_of_week !== 127 && (
+                <> · {DAY_LABELS.filter((_, i) => ((c.days_of_week >> i) & 1) === 1).join(' ')}</>
+              )}
+            </div>
           </div>
           <button onClick={() => triggerGeneration(c.id, c.name, c.member_ids)}
             className="px-2 py-1 rounded-lg text-xs font-bold"
@@ -108,7 +129,7 @@ export default function ChoresTab() {
             }}>
             {c.image_status === 'failed' ? 'Retry' : '↻'}
           </button>
-          <button onClick={() => setEditing({ id: c.id, name: c.name, points: c.points, routine: c.routine, member_ids: c.member_ids })}
+          <button onClick={() => setEditing({ id: c.id, name: c.name, points: c.points, routine: c.routine, member_ids: c.member_ids, days_of_week: c.days_of_week ?? 127 })}
             className="px-3 py-1 rounded-lg text-xs font-bold text-white/60"
             style={{ background: 'rgba(255,255,255,0.08)' }}>Edit</button>
           <button onClick={() => del(c.id)}
@@ -136,6 +157,28 @@ export default function ChoresTab() {
                   {r}
                 </button>
               ))}
+            </div>
+            <div className="flex flex-col gap-1">
+              <label className="text-xs text-white/50">Days</label>
+              <div className="flex gap-1">
+                {DAY_LABELS.map((label, dow) => {
+                  const active = ((editing.days_of_week >> dow) & 1) === 1
+                  return (
+                    <button
+                      key={dow}
+                      type="button"
+                      onClick={() => toggleDay(dow)}
+                      className="flex-1 py-2 rounded-xl text-xs font-bold"
+                      style={{
+                        background: active ? '#6366f1' : 'rgba(255,255,255,0.08)',
+                        color: active ? 'white' : 'rgba(255,255,255,0.3)',
+                      }}
+                    >
+                      {label}
+                    </button>
+                  )
+                })}
+              </div>
             </div>
             <div className="flex flex-col gap-1">
               <label className="text-xs text-white/50">Points</label>
