@@ -3,7 +3,7 @@ import { useState } from 'react'
 import useSWR from 'swr'
 import { useMembers } from '@/hooks/useMembers'
 import type { Chore } from '@/hooks/useChores'
-import { isDayEnabled } from '@/lib/chores'
+import { isDayEnabled, NOTE_COLORS } from '@/lib/chores'
 
 const fetcher = (url: string) => fetch(url).then((r) => r.json())
 
@@ -16,6 +16,33 @@ type ChoreForm = {
   routine: 'morning' | 'afternoon' | 'both'
   member_ids: number[]
   days_of_week: number
+  note_text: string
+  note_color: string
+  note_days_of_week: number
+}
+
+function DayPickerRow({ value, onToggle }: { value: number; onToggle: (dow: number) => void }) {
+  return (
+    <div className="flex gap-1">
+      {DAY_LABELS.map((label, dow) => {
+        const active = isDayEnabled(value, dow)
+        return (
+          <button
+            key={dow}
+            type="button"
+            onClick={() => onToggle(dow)}
+            className="flex-1 py-2 rounded-xl text-xs font-bold"
+            style={{
+              background: active ? '#6366f1' : 'rgba(255,255,255,0.08)',
+              color: active ? 'white' : 'rgba(255,255,255,0.3)',
+            }}
+          >
+            {label}
+          </button>
+        )
+      })}
+    </div>
+  )
 }
 
 export default function ChoresTab() {
@@ -81,14 +108,15 @@ export default function ChoresTab() {
       return { ...prev, member_ids: ids }
     })
 
-  const toggleDay = (dow: number) =>
+  const toggleDayField = (field: 'days_of_week' | 'note_days_of_week', dow: number) =>
     setEditing((prev) => {
       if (!prev) return prev
       const bit = 1 << dow
-      const isOn = (prev.days_of_week & bit) !== 0
-      // Prevent deselecting the last active day
-      if (isOn && prev.days_of_week === bit) return prev
-      return { ...prev, days_of_week: isOn ? prev.days_of_week & ~bit : prev.days_of_week | bit }
+      const current = prev[field]
+      const isOn = (current & bit) !== 0
+      // Prevent deselecting the last active day (only meaningful for days_of_week)
+      if (field === 'days_of_week' && isOn && current === bit) return prev
+      return { ...prev, [field]: isOn ? current & ~bit : current | bit }
     })
 
   return (
@@ -96,7 +124,7 @@ export default function ChoresTab() {
       <div className="flex items-center justify-between">
         <h2 className="text-lg font-bold text-white" style={{ fontFamily: 'var(--font-fredoka)' }}>Chores</h2>
         <button
-          onClick={() => setEditing({ name: '', points: 1, routine: 'morning', member_ids: [], days_of_week: 127 })}
+          onClick={() => setEditing({ name: '', points: 1, routine: 'morning', member_ids: [], days_of_week: 127, note_text: '', note_color: 'yellow', note_days_of_week: 127 })}
           className="px-4 py-2 rounded-xl text-sm font-bold text-white" style={{ background: '#6366f1' }}>
           + Add Chore
         </button>
@@ -120,6 +148,9 @@ export default function ChoresTab() {
               {c.days_of_week !== 127 && (
                 <> · {DAY_LABELS.filter((_, i) => isDayEnabled(c.days_of_week, i)).join(' ')}</>
               )}
+              {c.note_text?.trim() && (
+                <> · <span style={{ color: NOTE_COLORS[c.note_color] ?? NOTE_COLORS.yellow }}>●</span> {c.note_text}</>
+              )}
             </div>
           </div>
           <button onClick={() => triggerGeneration(c.id, c.name, c.member_ids)}
@@ -130,7 +161,7 @@ export default function ChoresTab() {
             }}>
             {c.image_status === 'failed' ? 'Retry' : '↻'}
           </button>
-          <button onClick={() => setEditing({ id: c.id, name: c.name, points: c.points, routine: c.routine, member_ids: c.member_ids, days_of_week: c.days_of_week ?? 127 })}
+          <button onClick={() => setEditing({ id: c.id, name: c.name, points: c.points, routine: c.routine, member_ids: c.member_ids, days_of_week: c.days_of_week ?? 127, note_text: c.note_text ?? '', note_color: c.note_color ?? 'yellow', note_days_of_week: c.note_days_of_week ?? 127 })}
             className="px-3 py-1 rounded-lg text-xs font-bold text-white/60"
             style={{ background: 'rgba(255,255,255,0.08)' }}>Edit</button>
           <button onClick={() => del(c.id)}
@@ -161,25 +192,7 @@ export default function ChoresTab() {
             </div>
             <div className="flex flex-col gap-1">
               <label className="text-xs text-white/50">Days</label>
-              <div className="flex gap-1">
-                {DAY_LABELS.map((label, dow) => {
-                  const active = isDayEnabled(editing.days_of_week, dow)
-                  return (
-                    <button
-                      key={dow}
-                      type="button"
-                      onClick={() => toggleDay(dow)}
-                      className="flex-1 py-2 rounded-xl text-xs font-bold"
-                      style={{
-                        background: active ? '#6366f1' : 'rgba(255,255,255,0.08)',
-                        color: active ? 'white' : 'rgba(255,255,255,0.3)',
-                      }}
-                    >
-                      {label}
-                    </button>
-                  )
-                })}
-              </div>
+              <DayPickerRow value={editing.days_of_week} onToggle={(dow) => toggleDayField('days_of_week', dow)} />
             </div>
             <div className="flex flex-col gap-1">
               <label className="text-xs text-white/50">Points</label>
@@ -201,6 +214,28 @@ export default function ChoresTab() {
                   </button>
                 ))}
               </div>
+            </div>
+            <div className="flex flex-col gap-1">
+              <label className="text-xs text-white/50">Note (optional)</label>
+              <input type="text" placeholder="e.g. Pack library books" value={editing.note_text}
+                onChange={(e) => setEditing((p) => p && ({ ...p, note_text: e.target.value }))}
+                className="px-3 py-2 rounded-xl bg-white/10 text-white outline-none border border-white/10" />
+              <div className="flex gap-2 mt-1">
+                {Object.entries(NOTE_COLORS).map(([key, hex]) => (
+                  <button key={key} type="button" onClick={() => setEditing((p) => p && ({ ...p, note_color: key }))}
+                    aria-label={key}
+                    className="w-7 h-7 rounded-full"
+                    style={{
+                      background: hex,
+                      border: editing.note_color === key ? '3px solid white' : '3px solid transparent',
+                    }}
+                  />
+                ))}
+              </div>
+            </div>
+            <div className="flex flex-col gap-1">
+              <label className="text-xs text-white/50">Note shows on</label>
+              <DayPickerRow value={editing.note_days_of_week} onToggle={(dow) => toggleDayField('note_days_of_week', dow)} />
             </div>
             <div className="flex gap-2 mt-2">
               <button onClick={() => setEditing(null)}
