@@ -89,3 +89,12 @@ test('chores table has days_of_week column with default 127', () => {
   expect(col).toBeDefined()
   expect(col?.dflt_value).toBe('127')
 })
+
+test('chores table has note columns with correct defaults', () => {
+  const db = getDb()
+  const info = db.prepare('PRAGMA table_info(chores)').all() as { name: string; dflt_value: string | null }[]
+  const byName = (n: string) => info.find((c) => c.name === n)
+  expect(byName('note_text')?.dflt_value).toBe("''")
+  expect(byName('note_color')?.dflt_value).toBe("'yellow'")
+  expect(byName('note_days_of_week')?.dflt_value).toBe('127')
+})

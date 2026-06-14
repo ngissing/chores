@@ -93,6 +93,24 @@ function initSchema(db: Database.Database) {
     // Column already exists — safe to ignore
   }
 
+  // Optional scheduled note overlay for chores (e.g. "Pack library books" on Fridays).
+  // note_days_of_week uses the same bitmask convention as days_of_week.
+  try {
+    db.exec(`ALTER TABLE chores ADD COLUMN note_text TEXT NOT NULL DEFAULT ''`)
+  } catch {
+    // Column already exists — safe to ignore
+  }
+  try {
+    db.exec(`ALTER TABLE chores ADD COLUMN note_color TEXT NOT NULL DEFAULT 'yellow'`)
+  } catch {
+    // Column already exists — safe to ignore
+  }
+  try {
+    db.exec(`ALTER TABLE chores ADD COLUMN note_days_of_week INTEGER NOT NULL DEFAULT 127`)
+  } catch {
+    // Column already exists — safe to ignore
+  }
+
   // Per-member chore images
   db.exec(`
     CREATE TABLE IF NOT EXISTS chore_member_images (
