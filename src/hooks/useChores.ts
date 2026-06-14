@@ -1,6 +1,6 @@
 'use client'
 import useSWR from 'swr'
-import { isDayEnabled } from '@/lib/chores'
+import { isDayEnabled, isNoteVisible } from '@/lib/chores'
 
 const fetcher = (url: string) => fetch(url).then((r) => r.json())
 
@@ -13,6 +13,10 @@ export interface Chore {
   routine: 'morning' | 'afternoon' | 'both'
   member_ids: number[]
   days_of_week: number
+  note_text: string
+  note_color: string
+  note_days_of_week: number
+  noteVisible: boolean
 }
 
 export interface Completion {
@@ -27,7 +31,7 @@ export function useChores(
   routine: 'morning' | 'afternoon',
   date: string
 ) {
-  const { data: allChores, mutate: mutateChores } = useSWR<Chore[]>(
+  const { data: allChores, mutate: mutateChores } = useSWR<Omit<Chore, 'noteVisible'>[]>(
     memberId ? `/api/chores?member_id=${memberId}` : '/api/chores',
     fetcher
   )
@@ -39,13 +43,18 @@ export function useChores(
 
   const dow = new Date().getDay() // 0 = Sunday … 6 = Saturday, local time
 
-  const chores = (allChores ?? []).filter(
-    (c) =>
-      memberId !== null &&
-      c.member_ids.includes(memberId) &&
-      (c.routine === routine || c.routine === 'both') &&
-      isDayEnabled(c.days_of_week, dow)
-  )
+  const chores: Chore[] = (allChores ?? [])
+    .filter(
+      (c) =>
+        memberId !== null &&
+        c.member_ids.includes(memberId) &&
+        (c.routine === routine || c.routine === 'both') &&
+        isDayEnabled(c.days_of_week, dow)
+    )
+    .map((c) => ({
+      ...c,
+      noteVisible: isNoteVisible(c.note_text, c.note_days_of_week, dow),
+    }))
 
   const completedIds = new Set((completions ?? []).map((c) => c.chore_id))
 
