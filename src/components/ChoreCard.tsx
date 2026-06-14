@@ -63,6 +63,9 @@ export default function ChoreCard({
               color: '#1a1a2e',
               padding: '0.3rem 0.5rem',
               fontSize: 'clamp(0.75rem, 1.6vw, 1.25rem)',
+              whiteSpace: 'nowrap',
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
             }}
           >
             {noteText}
