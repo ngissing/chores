@@ -2,10 +2,10 @@ import { getDb } from '../db'
 
 test('schema initialises all tables', () => {
   const db = getDb()
-  const tables = db
+  const tables = (db
     .prepare("SELECT name FROM sqlite_master WHERE type='table'")
-    .all()
-    .map((r: { name: string }) => r.name)
+    .all() as { name: string }[])
+    .map((r) => r.name)
 
   expect(tables).toContain('members')
   expect(tables).toContain('chores')
@@ -40,10 +40,10 @@ test('members table has appearance column', () => {
 
 test('chore_member_images table exists', () => {
   const db = getDb()
-  const tables = db
+  const tables = (db
     .prepare("SELECT name FROM sqlite_master WHERE type='table'")
-    .all()
-    .map((r: { name: string }) => r.name)
+    .all() as { name: string }[])
+    .map((r) => r.name)
   expect(tables).toContain('chore_member_images')
 })
 
