@@ -1,4 +1,5 @@
 'use client'
+import { NOTE_COLORS } from '@/lib/chores'
 
 interface Props {
   id: number
@@ -8,6 +9,9 @@ interface Props {
   completed: boolean
   accentColour: string
   isPending?: boolean
+  noteText?: string
+  noteColor?: string
+  noteVisible?: boolean
   onToggle: (id: number) => void
 }
 
@@ -19,6 +23,9 @@ export default function ChoreCard({
   completed,
   accentColour,
   isPending,
+  noteText,
+  noteColor,
+  noteVisible,
   onToggle,
 }: Props) {
   return (
@@ -34,7 +41,7 @@ export default function ChoreCard({
       }}
     >
       {/* Image area */}
-      <div className="w-full overflow-hidden flex items-center justify-center bg-white" style={{ minHeight: 0 }}>
+      <div className="w-full overflow-hidden flex items-center justify-center bg-white relative" style={{ minHeight: 0 }}>
         {imageStatus === 'ready' && imagePath ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img src={imagePath} alt={name} className="w-full h-full object-contain" style={{ opacity: completed ? 0.35 : 1 }} />
@@ -45,6 +52,21 @@ export default function ChoreCard({
           >
             {imageStatus === 'failed' ? '⚠️' : '⏳'}
           </span>
+        )}
+
+        {/* Scheduled note banner */}
+        {noteVisible && noteText && (
+          <div
+            className="absolute bottom-0 left-0 right-0 text-center font-bold"
+            style={{
+              background: NOTE_COLORS[noteColor ?? 'yellow'] ?? NOTE_COLORS.yellow,
+              color: '#1a1a2e',
+              padding: '0.3rem 0.5rem',
+              fontSize: 'clamp(0.75rem, 1.6vw, 1.25rem)',
+            }}
+          >
+            {noteText}
+          </div>
         )}
       </div>
 

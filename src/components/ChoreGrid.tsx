@@ -62,6 +62,9 @@ export default function ChoreGrid({
           completed={completedIds.has(chore.id)}
           accentColour={accentColour}
           isPending={pendingIds?.has(chore.id)}
+          noteText={chore.note_text}
+          noteColor={chore.note_color}
+          noteVisible={chore.noteVisible}
           onToggle={onToggle}
         />
       ))}
