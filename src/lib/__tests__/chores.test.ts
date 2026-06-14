@@ -1,4 +1,4 @@
-import { isDayEnabled } from '../chores'
+import { isDayEnabled, isNoteVisible, NOTE_COLORS } from '../chores'
 
 test('isDayEnabled returns true for all days when mask is 127', () => {
   for (let dow = 0; dow <= 6; dow++) {
@@ -32,4 +32,34 @@ test('isDayEnabled weekend-only mask (65 = 0b1000001) enables Sat and Sun only',
   expect(isDayEnabled(weekends, 1)).toBe(false) // Monday
   expect(isDayEnabled(weekends, 5)).toBe(false) // Friday
   expect(isDayEnabled(weekends, 6)).toBe(true) // Saturday
+})
+
+test('isNoteVisible is false when note text is empty or whitespace', () => {
+  expect(isNoteVisible('', 127, 5)).toBe(false)
+  expect(isNoteVisible('   ', 127, 5)).toBe(false)
+})
+
+test('isNoteVisible is true when text is set and today matches the mask', () => {
+  const fridayOnly = 32 // bit 5
+  expect(isNoteVisible('Pack library books', fridayOnly, 5)).toBe(true) // Friday
+})
+
+test('isNoteVisible is false when text is set but today does not match the mask', () => {
+  const fridayOnly = 32 // bit 5
+  expect(isNoteVisible('Pack library books', fridayOnly, 1)).toBe(false) // Monday
+  expect(isNoteVisible('Pack library books', fridayOnly, 0)).toBe(false) // Sunday
+})
+
+test('isNoteVisible is true every day when mask is 127 and text is set', () => {
+  for (let dow = 0; dow <= 6; dow++) {
+    expect(isNoteVisible('Reminder', 127, dow)).toBe(true)
+  }
+})
+
+test('NOTE_COLORS provides a hex value for each preset key', () => {
+  expect(NOTE_COLORS.yellow).toBe('#facc15')
+  expect(NOTE_COLORS.blue).toBe('#60a5fa')
+  expect(NOTE_COLORS.pink).toBe('#f472b6')
+  expect(NOTE_COLORS.green).toBe('#4ade80')
+  expect(NOTE_COLORS.orange).toBe('#fb923c')
 })
