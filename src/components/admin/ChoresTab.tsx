@@ -64,10 +64,11 @@ export default function ChoresTab() {
   const save = async () => {
     if (!editing) return
     const isNew = !editing.id
+    const payload = { ...editing, note_text: editing.note_text.trim() }
     const res = await fetch('/api/chores', {
       method: isNew ? 'POST' : 'PUT',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(editing),
+      body: JSON.stringify(payload),
     })
     if (isNew) {
       const created = await res.json() as { id: number; name: string }
@@ -149,7 +150,8 @@ export default function ChoresTab() {
                 <> · {DAY_LABELS.filter((_, i) => isDayEnabled(c.days_of_week, i)).join(' ')}</>
               )}
               {c.note_text?.trim() && (
-                <> · <span style={{ color: NOTE_COLORS[c.note_color] ?? NOTE_COLORS.yellow }}>●</span> {c.note_text}</>
+                <> · <span style={{ color: NOTE_COLORS[c.note_color] ?? NOTE_COLORS.yellow }}>●</span>{' '}
+                {c.note_text.trim().length > 30 ? `${c.note_text.trim().slice(0, 30)}…` : c.note_text.trim()}</>
               )}
             </div>
           </div>
