@@ -30,7 +30,12 @@ export async function PUT(req: NextRequest) {
     return NextResponse.json({ ok: true })
   }
 
-  const allowed = ['morning_start_time', 'afternoon_start_time', 'daily_reset_time']
+  const allowed = [
+    'morning_start_time', 'afternoon_start_time', 'daily_reset_time',
+    'countdown_enabled', 'countdown_idle_minutes',
+    'countdown_start_time', 'countdown_target_time', 'countdown_off_time',
+    'countdown_color_elapsed', 'countdown_color_remaining',
+  ]
   for (const key of allowed) {
     if (body[key] !== undefined) upsert.run(key, body[key])
   }
