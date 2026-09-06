@@ -9,6 +9,9 @@ import { useGoldChores } from '@/hooks/useGoldChores'
 import { useRoutine } from '@/hooks/useRoutine'
 import MemberSelector from '@/components/MemberSelector'
 import ChoreGrid from '@/components/ChoreGrid'
+import CountdownOverlay from '@/components/CountdownOverlay'
+import { useIdleOverlay } from '@/hooks/useIdleOverlay'
+import { parseCountdownSettings, computeCountdownState } from '@/lib/countdown'
 
 const fetcher = (url: string) => fetch(url).then((r) => r.json())
 
@@ -18,6 +21,17 @@ export default function HomePage() {
   const [activeMemberId, setActiveMemberId] = useState<number | null>(null)
   const { data: settings } = useSWR<Record<string, string>>('/api/settings', fetcher)
   const routine = useRoutine(settings?.afternoon_start_time ?? '12:00')
+
+  // Morning countdown overlay
+  const countdown = parseCountdownSettings(settings)
+  const [cdNow, setCdNow] = useState(() => new Date())
+  useEffect(() => {
+    const t = setInterval(() => setCdNow(new Date()), 30_000)
+    return () => clearInterval(t)
+  }, [])
+  const cdActive = countdown.enabled && computeCountdownState(countdown, cdNow).phase !== 'inactive'
+  const { visible: cdVisible, dismiss: cdDismiss } = useIdleOverlay(countdown.idleMinutes, cdActive)
+
   const today = new Date().toISOString().slice(0, 10)
   const { chores, completedIds, mutateCompletions } = useChores(activeMemberId, routine, today)
   const points = usePoints(activeMemberId)
@@ -181,6 +195,8 @@ export default function HomePage() {
           onSelect={setActiveMemberId}
         />
       </div>
+
+      {cdVisible && <CountdownOverlay settings={countdown} onDismiss={cdDismiss} />}
     </div>
   )
 }

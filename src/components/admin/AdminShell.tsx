@@ -6,14 +6,16 @@ import ScheduleTab from './ScheduleTab'
 import PointsPayTab from './PointsPayTab'
 import ChangePinTab from './ChangePinTab'
 import GoldTab from './GoldTab'
+import CountdownTab from './CountdownTab'
 
-type Tab = 'members' | 'chores' | 'schedule' | 'points' | 'pin' | 'gold'
+type Tab = 'members' | 'chores' | 'schedule' | 'points' | 'pin' | 'gold' | 'countdown'
 
 const TABS: { id: Tab; label: string; icon: string }[] = [
   { id: 'members',  label: 'Members',      icon: '👨‍👩‍👧‍👦' },
   { id: 'chores',   label: 'Chores',       icon: '📋' },
   { id: 'gold',     label: 'Gold Chores',  icon: '⭐' },
   { id: 'schedule', label: 'Schedule',     icon: '🕐' },
+  { id: 'countdown', label: 'Countdown',    icon: '⏳' },
   { id: 'points',   label: 'Points & Pay', icon: '💰' },
   { id: 'pin',      label: 'Change PIN',   icon: '🔒' },
 ]
@@ -45,6 +47,7 @@ export default function AdminShell() {
         {tab === 'chores'   && <ChoresTab />}
         {tab === 'gold'     && <GoldTab />}
         {tab === 'schedule' && <ScheduleTab />}
+        {tab === 'countdown' && <CountdownTab />}
         {tab === 'points'   && <PointsPayTab />}
         {tab === 'pin'      && <ChangePinTab />}
       </div>
