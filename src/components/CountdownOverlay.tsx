@@ -29,15 +29,19 @@ function fmtTarget(minutes: number) {
 export default function CountdownOverlay({
   settings,
   onDismiss,
+  previewAt,
 }: {
   settings: CountdownSettings
   onDismiss: () => void
+  previewAt?: Date
 }) {
-  const [now, setNow] = useState(() => new Date())
+  const [liveNow, setLiveNow] = useState(() => new Date())
   useEffect(() => {
-    const t = setInterval(() => setNow(new Date()), 1000)
+    if (previewAt) return
+    const t = setInterval(() => setLiveNow(new Date()), 1000)
     return () => clearInterval(t)
-  }, [])
+  }, [previewAt])
+  const now = previewAt ?? liveNow
 
   const state = computeCountdownState(settings, now)
   const cx = 150

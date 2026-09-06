@@ -2,12 +2,14 @@
 import { useState } from 'react'
 import useSWR from 'swr'
 import { parseCountdownSettings } from '@/lib/countdown'
+import CountdownOverlay from '@/components/CountdownOverlay'
 
 const fetcher = (url: string) => fetch(url).then((r) => r.json())
 
 export default function CountdownTab() {
   const { data: settings, mutate } = useSWR<Record<string, string>>('/api/settings', fetcher)
   const [form, setForm] = useState<Record<string, string> | null>(null)
+  const [preview, setPreview] = useState(false)
   const current = form ?? settings ?? {}
 
   const set = (key: string, value: string) =>
@@ -103,11 +105,31 @@ export default function CountdownTab() {
         </div>
       </div>
 
-      <button onClick={save}
-        className="px-6 py-3 rounded-xl text-sm font-bold text-white w-40"
-        style={{ background: '#6366f1' }}>
-        Save
-      </button>
+      <div className="flex gap-3">
+        <button onClick={save}
+          className="px-6 py-3 rounded-xl text-sm font-bold text-white w-40"
+          style={{ background: '#6366f1' }}>
+          Save
+        </button>
+        <button onClick={() => setPreview(true)}
+          className="px-6 py-3 rounded-xl text-sm font-bold text-white w-40"
+          style={{ background: 'rgba(255,255,255,0.12)' }}>
+          👁 Preview now
+        </button>
+      </div>
+
+      {preview && (
+        <CountdownOverlay
+          settings={{ ...cd, enabled: true }}
+          previewAt={(() => {
+            const span = cd.targetMinutes - cd.startMinutes
+            const mins = cd.startMinutes + (span > 0 ? span * 0.55 : 55)
+            // A fixed weekday (Wed 2026-01-07) so the preview always shows the counting state.
+            return new Date(2026, 0, 7, Math.floor(mins / 60), Math.floor(mins % 60))
+          })()}
+          onDismiss={() => setPreview(false)}
+        />
+      )}
     </div>
   )
 }
