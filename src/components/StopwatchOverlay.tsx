@@ -1,6 +1,7 @@
 'use client'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { formatDuration, isPersonalBest } from '@/lib/stopwatch'
+import { AUTO_STOP_MS, readRunStart, writeRunStart, clearRunStart } from '@/lib/stopwatchRun'
 
 interface Run { duration_ms: number; created_at?: string }
 
@@ -18,6 +19,7 @@ export default function StopwatchOverlay({
   const [runs, setRuns] = useState<Run[]>([])
   const [bestMsState, setBestMsState] = useState<number | null>(null)
   const [newBest, setNewBest] = useState(false)
+  const [autoStopped, setAutoStopped] = useState(false)
   const startedAt = useRef(0)
   const raf = useRef<number | null>(null)
 
@@ -30,24 +32,66 @@ export default function StopwatchOverlay({
     }
   }, [memberId])
 
-  useEffect(() => { loadRuns() }, [loadRuns])
+  const stopTicking = () => {
+    if (raf.current) cancelAnimationFrame(raf.current)
+    raf.current = null
+  }
+
+  // Auto-stop a forgotten run: discard it (no saved time) once past the cap.
+  const autoStop = useCallback(() => {
+    stopTicking()
+    clearRunStart(memberId)
+    startedAt.current = 0
+    setElapsed(0)
+    setPhase('idle')
+    setAutoStopped(true)
+  }, [memberId])
 
   const tick = useCallback(() => {
-    setElapsed(Date.now() - startedAt.current)
+    const e = Date.now() - startedAt.current
+    if (e >= AUTO_STOP_MS) {
+      autoStop()
+      return
+    }
+    setElapsed(e)
     raf.current = requestAnimationFrame(tick)
-  }, [])
+  }, [autoStop])
+
+  // On open: resume an in-progress run from the persisted start (or auto-stop if
+  // it's already older than the cap).
+  useEffect(() => {
+    loadRuns()
+    const s = readRunStart(memberId)
+    if (s !== null) {
+      if (Date.now() - s >= AUTO_STOP_MS) {
+        clearRunStart(memberId)
+        setAutoStopped(true)
+      } else {
+        startedAt.current = s
+        setElapsed(Date.now() - s)
+        setPhase('running')
+        raf.current = requestAnimationFrame(tick)
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [memberId])
+
+  useEffect(() => () => stopTicking(), [])
 
   const start = () => {
     setNewBest(false)
+    setAutoStopped(false)
     startedAt.current = Date.now()
+    writeRunStart(memberId, startedAt.current)
     setElapsed(0)
     setPhase('running')
     raf.current = requestAnimationFrame(tick)
   }
 
   const stop = async () => {
-    if (raf.current) cancelAnimationFrame(raf.current)
+    stopTicking()
     const final = Date.now() - startedAt.current
+    clearRunStart(memberId)
     setElapsed(final)
     setPhase('stopped')
     const wasBest = isPersonalBest(final, runs)
@@ -67,16 +111,22 @@ export default function StopwatchOverlay({
   const reset = () => {
     setElapsed(0)
     setNewBest(false)
+    setAutoStopped(false)
     setPhase('idle')
   }
-
-  useEffect(() => () => { if (raf.current) cancelAnimationFrame(raf.current) }, [])
 
   return (
     <div className="fixed inset-0 z-[9999] flex flex-col items-center justify-center gap-8"
       style={{ background: '#0b0b14' }}>
       <button onClick={onClose}
         className="absolute top-5 right-6 text-white/40 text-4xl leading-none" aria-label="Close">✕</button>
+
+      {phase === 'running' && (
+        <div className="text-white/40 text-lg font-bold">running — you can close this, it keeps going</div>
+      )}
+      {autoStopped && phase === 'idle' && (
+        <div className="text-amber-400 text-lg font-bold">Stopped automatically after 2 hours</div>
+      )}
 
       <div className="font-bold tabular-nums" style={{
         fontFamily: 'var(--font-fredoka)',
