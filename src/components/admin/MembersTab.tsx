@@ -115,6 +115,15 @@ export default function MembersTab() {
                 onChange={(e) => setEditing((p) => ({ ...p, point_value_cents: Number(e.target.value) }))}
                 className="px-3 py-2 rounded-xl bg-white/10 text-white outline-none border border-white/10" />
             </div>
+            <label className="flex items-center gap-2 text-sm text-white/70 font-bold">
+              <input
+                type="checkbox"
+                checked={!!editing.stopwatch_enabled}
+                onChange={(e) => setEditing((p) => ({ ...p, stopwatch_enabled: e.target.checked ? 1 : 0 }))}
+                style={{ width: 18, height: 18 }}
+              />
+              ⏱ Stopwatch enabled
+            </label>
             <div className="flex gap-2 mt-2">
               <button onClick={() => setEditing(null)}
                 className="flex-1 py-2 rounded-xl text-sm font-bold text-white/50"
