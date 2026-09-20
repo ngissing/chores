@@ -49,7 +49,11 @@ export default function CountdownOverlay({
   const r = 130
   const f = state.elapsedFraction
 
-  const handleDown = (e: React.PointerEvent) => {
+  // Dismiss on click — the LAST event of a tap. Dismissing on pointerdown
+  // unmounts the overlay mid-tap, so the following click lands on whatever
+  // control is revealed underneath ("click-through"). Handling click means the
+  // whole tap completes on the overlay and nothing beneath it is activated.
+  const handleClick = (e: React.MouseEvent) => {
     e.preventDefault()
     e.stopPropagation()
     onDismiss()
@@ -57,7 +61,7 @@ export default function CountdownOverlay({
 
   return (
     <div
-      onPointerDown={handleDown}
+      onClick={handleClick}
       className="fixed inset-0 flex flex-col items-center justify-center gap-6"
       style={{ zIndex: 9999, background: '#0b0b14', touchAction: 'none' }}
     >
