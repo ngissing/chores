@@ -12,6 +12,7 @@ export interface Member {
   point_value_cents: number
   streak_days: number
   appearance: string
+  stopwatch_enabled?: number
 }
 
 export function useMembers() {

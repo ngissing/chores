@@ -28,10 +28,10 @@ export async function POST(req: NextRequest) {
 }
 
 export async function PUT(req: NextRequest) {
-  const { id, name, age, colour, point_value_cents, appearance } = await req.json()
+  const { id, name, age, colour, point_value_cents, appearance, stopwatch_enabled } = await req.json()
   getDb()
-    .prepare('UPDATE members SET name=?, age=?, colour=?, point_value_cents=?, appearance=? WHERE id=?')
-    .run(name, age, colour, point_value_cents, appearance ?? '', id)
+    .prepare('UPDATE members SET name=?, age=?, colour=?, point_value_cents=?, appearance=?, stopwatch_enabled=? WHERE id=?')
+    .run(name, age, colour, point_value_cents, appearance ?? '', stopwatch_enabled ? 1 : 0, id)
   return NextResponse.json({ ok: true })
 }
 
