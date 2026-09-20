@@ -111,6 +111,24 @@ function initSchema(db: Database.Database) {
     // Column already exists — safe to ignore
   }
 
+  // Per-member stopwatch feature flag
+  try {
+    db.exec(`ALTER TABLE members ADD COLUMN stopwatch_enabled INTEGER NOT NULL DEFAULT 0`)
+  } catch {
+    // Column already exists — safe to ignore
+  }
+
+  // Saved stopwatch runs (per member)
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS stopwatch_runs (
+      id          INTEGER PRIMARY KEY AUTOINCREMENT,
+      member_id   INTEGER NOT NULL REFERENCES members(id) ON DELETE CASCADE,
+      duration_ms INTEGER NOT NULL,
+      created_at  DATETIME DEFAULT CURRENT_TIMESTAMP
+    );
+    CREATE INDEX IF NOT EXISTS idx_stopwatch_runs_member ON stopwatch_runs(member_id);
+  `)
+
   // Per-member chore images
   db.exec(`
     CREATE TABLE IF NOT EXISTS chore_member_images (

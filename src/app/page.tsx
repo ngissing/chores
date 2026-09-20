@@ -9,6 +9,7 @@ import { useGoldChores } from '@/hooks/useGoldChores'
 import { useRoutine } from '@/hooks/useRoutine'
 import MemberSelector from '@/components/MemberSelector'
 import ChoreGrid from '@/components/ChoreGrid'
+import StopwatchOverlay from '@/components/StopwatchOverlay'
 import CountdownOverlay from '@/components/CountdownOverlay'
 import { useIdleOverlay } from '@/hooks/useIdleOverlay'
 import { parseCountdownSettings, computeCountdownState } from '@/lib/countdown'
@@ -52,6 +53,7 @@ export default function HomePage() {
   const accentColour = activeMember?.colour ?? '#6366f1'
 
   const [pendingIds, setPendingIds] = useState<Set<number>>(new Set())
+  const [stopwatchOpen, setStopwatchOpen] = useState(false)
 
   const handleToggle = async (choreId: number) => {
     if (!activeMemberId || pendingIds.has(choreId)) return
@@ -156,6 +158,15 @@ export default function HomePage() {
           <span className="font-bold text-orange-400 text-sm">🔥{activeMember!.streak_days}</span>
         )}
 
+        {/* Stopwatch (only for enabled members) */}
+        {activeMember?.stopwatch_enabled ? (
+          <button onClick={() => setStopwatchOpen(true)}
+            className="text-white/40 hover:text-white/80 transition-colors"
+            style={{ fontSize: '1.5rem', padding: '0.4rem' }} aria-label="Stopwatch">
+            ⏱
+          </button>
+        ) : null}
+
         {/* Settings gear */}
         <button onClick={() => router.push('/admin')}
           className="text-white/30 hover:text-white/70 transition-colors"
@@ -197,6 +208,10 @@ export default function HomePage() {
       </div>
 
       {cdVisible && <CountdownOverlay settings={countdown} onDismiss={cdDismiss} />}
+
+      {stopwatchOpen && activeMember && (
+        <StopwatchOverlay memberId={activeMember.id} colour={accentColour} onClose={() => setStopwatchOpen(false)} />
+      )}
     </div>
   )
 }
