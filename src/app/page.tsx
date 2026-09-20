@@ -10,6 +10,7 @@ import { useRoutine } from '@/hooks/useRoutine'
 import MemberSelector from '@/components/MemberSelector'
 import ChoreGrid from '@/components/ChoreGrid'
 import StopwatchOverlay from '@/components/StopwatchOverlay'
+import StopwatchButton from '@/components/StopwatchButton'
 import CountdownOverlay from '@/components/CountdownOverlay'
 import { useIdleOverlay } from '@/hooks/useIdleOverlay'
 import { parseCountdownSettings, computeCountdownState } from '@/lib/countdown'
@@ -160,11 +161,7 @@ export default function HomePage() {
 
         {/* Stopwatch (only for enabled members) */}
         {activeMember?.stopwatch_enabled ? (
-          <button onClick={() => setStopwatchOpen(true)}
-            className="text-white/40 hover:text-white/80 transition-colors"
-            style={{ fontSize: '1.5rem', padding: '0.4rem' }} aria-label="Stopwatch">
-            ⏱
-          </button>
+          <StopwatchButton memberId={activeMember.id} onOpen={() => setStopwatchOpen(true)} />
         ) : null}
 
         {/* Settings gear */}
